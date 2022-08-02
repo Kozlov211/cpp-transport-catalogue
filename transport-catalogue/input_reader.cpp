@@ -93,4 +93,3 @@ istream& operator>>(istream& is, InputReader::InputReader& reader) {
     reader.AddQuere(move(quere));
     return is;
 }
-// место для вашего кода
