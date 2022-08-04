@@ -4,36 +4,48 @@ using namespace std;
 
 namespace InputReader {
 
-void InputReader::AddQuere(const Quere::Quere&& quere) {
-    if (quere.type == "Stop") {
-        vector<string> data = SplitIntoWords(quere.data, ',');
-        std::pair<std::string, uint32_t> distance_to_stop;
-        transport_catalogue.AddStop(move(quere.name), {stod(data[0]), stod(data[1])}, false);
+void InputReader::DataInput(const size_t query_count) {
+    for(size_t i = 0; i < query_count; ++i) {
+        string line;
+        getline(cin, line);
+        size_t space = line.find_first_of(' ');
+        size_t point = line.find_first_of(':');
+        Query::Query query;
+        query.type = line.substr(0, space);
+        query.name = line.substr(space + 1, point - space - 1);
+        query.data = line.substr(point + 2, line.size() - point);
+        if (query.type == "Bus") {
+            deque_buses_.push_back(move(query));
+        } else {
+            vector<string> data = SplitIntoWords(query.data, ',');
+            transport_catalogue_.AddStop(query.name, {stod(data[0]), stod(data[1])});
+            stops_info.push_back(move(query));
+        }
+    }
+    while(!stops_info.empty()) {
+        Query::Query query = stops_info.front();
+        pair<string, uint32_t> distance_to_stop;
+        vector<string> data = SplitIntoWords(query.data, ',');
         for (size_t i = 2; i < data.size(); ++i) {
             distance_to_stop = GetDistanceToStop(data[i]);
-            if (transport_catalogue.CheckStop(distance_to_stop.first)) {
-                auto key_stop = transport_catalogue.GetKeyStop(distance_to_stop.first);
-                transport_catalogue.AddDistanceToStop(quere.name, key_stop->first, distance_to_stop.second);
-            } else {
-                transport_catalogue.AddStop(move(distance_to_stop.first), {}, true);
-                auto key_stop = transport_catalogue.GetKeyStop(distance_to_stop.first);
-                transport_catalogue.AddDistanceToStop(quere.name, key_stop->first, distance_to_stop.second);
-            }
+            transport_catalogue_.SetDistanceToStop(query.name, distance_to_stop.first, distance_to_stop.second);
         }
-
-    } else {
+        stops_info.pop_front();
+    }
+    while(!deque_buses_.empty()) {
+        Query::Query query = deque_buses_.front();
         bool is_circle;
-        vector<string> route = GetStops(quere.data, is_circle);
+        vector<string> route = GetStops(query.data, is_circle);
         vector<string_view> rout_b;
-        transport_catalogue.AddBusRoute(quere.name, is_circle, rout_b);
+        transport_catalogue_.AddBusRoute(query.name, is_circle, rout_b);
         for (string& stop : route) {
-            transport_catalogue.AddStop(move(stop), {}, true);
-            auto key_stop = transport_catalogue.GetKeyStop(stop);
-            auto key_bus = transport_catalogue.GetKeyBus(quere.name);
-            transport_catalogue.AddBusToStop(stop, key_bus->first);
-            rout_b.push_back(key_stop->first);
+           auto key_stop = transport_catalogue_.GetKeyStop(stop);
+           auto key_bus = transport_catalogue_.GetKeyBus(query.name);
+           transport_catalogue_.AddBusToStop(key_stop->first, key_bus->first);
+           rout_b.push_back(key_stop->first);
         }
-        transport_catalogue.AddBusRoute(quere.name, is_circle, rout_b);
+        transport_catalogue_.AddBusRoute(query.name, is_circle, rout_b);
+        deque_buses_.pop_front();
     }
 }
 
@@ -81,15 +93,3 @@ string ReadLine() {
 
 } // InputReader
 
-istream& operator>>(istream& is, InputReader::InputReader& reader) {
-    string line;
-    getline(is, line);
-    size_t space = line.find_first_of(' ');
-    size_t point = line.find_first_of(':');
-    InputReader::Quere::Quere quere;
-    quere.type = line.substr(0, space);
-    quere.name = line.substr(space + 1, point - space - 1);
-    quere.data = line.substr(point + 2, line.size() - point);
-    reader.AddQuere(move(quere));
-    return is;
-}
