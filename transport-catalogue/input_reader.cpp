@@ -4,50 +4,78 @@ using namespace std;
 
 namespace InputReader {
 
-void InputReader::DataInput(const size_t query_count) {
+void InputReader::ReadInputData(const size_t query_count) {
     for(size_t i = 0; i < query_count; ++i) {
         string line;
         getline(cin, line);
         size_t space = line.find_first_of(' ');
         size_t point = line.find_first_of(':');
-        Query::Query query;
-        query.type = line.substr(0, space);
-        query.name = line.substr(space + 1, point - space - 1);
-        query.data = line.substr(point + 2, line.size() - point);
-        if (query.type == "Bus") {
-            deque_buses_.push_back(move(query));
-        } else {
-            vector<string> data = SplitIntoWords(query.data, ',');
-            transport_catalogue_.AddStop(query.name, {stod(data[0]), stod(data[1])});
-            stops_info.push_back(move(query));
-        }
+        Request::Request request;
+        request.type = line.substr(0, space);
+        request.name = line.substr(space + 1, point - space - 1);
+        request.data = line.substr(point + 2, line.size() - point);
+        deque_requests_.push_back(move(request));
     }
-    while(!stops_info.empty()) {
-        Query::Query query = stops_info.front();
-        pair<string, uint32_t> distance_to_stop;
-        vector<string> data = SplitIntoWords(query.data, ',');
-        for (size_t i = 2; i < data.size(); ++i) {
-            distance_to_stop = GetDistanceToStop(data[i]);
-            transport_catalogue_.SetDistanceToStop(query.name, distance_to_stop.first, distance_to_stop.second);
-        }
-        stops_info.pop_front();
+    GetStopsFromData();
+    AppendStopsToTransportCatalogue();
+    GetBusesFromData();
+    AppendBusesToTransportCatalogue();
+}
+
+void InputReader::AppendStopsToTransportCatalogue() {
+    for (auto& stop : deque_stops_) {
+        transport_catalogue_.AppendStop(stop.name, &stop);
     }
-    while(!deque_buses_.empty()) {
-        Query::Query query = deque_buses_.front();
-        bool is_circle;
-        vector<string> route = GetStops(query.data, is_circle);
-        vector<string_view> rout_b;
-        transport_catalogue_.AddBusRoute(query.name, is_circle, rout_b);
-        for (string& stop : route) {
-           auto key_stop = transport_catalogue_.GetKeyStop(stop);
-           auto key_bus = transport_catalogue_.GetKeyBus(query.name);
-           transport_catalogue_.AddBusToStop(key_stop->first, key_bus->first);
-           rout_b.push_back(key_stop->first);
-        }
-        transport_catalogue_.AddBusRoute(query.name, is_circle, rout_b);
-        deque_buses_.pop_front();
+    for (auto& stop : deque_distance_between_stops_) {
+        transport_catalogue_.AppendDistanceToStop(transport_catalogue_.GetStop(stop.name), transport_catalogue_.GetStop(stop.stop), stop.road_distances);
     }
 }
+
+void InputReader::GetStopsFromData() {
+    for (auto& request : deque_requests_) {
+        if (request.type == "Stop") {
+            vector<string> data = SplitIntoWords(request.data, ',');
+            TransportCatalogue::Stop::Stop stop {request.name, {stod(data[0]), stod(data[1])}};
+            pair<string, uint32_t> distance_to_stop;
+            for (size_t i = 2; i < data.size(); ++i) {
+                distance_to_stop = GetDistanceToStop(data[i]);
+                DistanceBetweenStops::DistanceBetweenStops distance_between_stop;
+                distance_between_stop.name = request.name;
+                distance_between_stop.stop = distance_to_stop.first;
+                distance_between_stop.road_distances = distance_to_stop.second;
+                deque_distance_between_stops_.push_back(move(distance_between_stop));
+            }
+            deque_stops_.push_back(move(stop));
+        }
+    }
+}
+
+void InputReader::AppendBusesToTransportCatalogue() {
+    for (auto& bus : deque_buses_) {
+        transport_catalogue_.AppendBus(bus.name, &bus);
+        for (auto* stop : bus.route) {
+            transport_catalogue_.AppendBusToStop(stop, &bus);
+        }
+    }
+}
+
+
+void InputReader::GetBusesFromData() {
+    for (auto& request : deque_requests_) {
+        if (request.type == "Bus") {
+            TransportCatalogue::Bus::Bus bus;
+            bus.name = request.name;
+            bool is_circle;
+            vector<string> route = GetStops(request.data, is_circle);
+            bus.is_circle = is_circle;
+            for (const auto& stop : route) {
+                bus.route.push_back(transport_catalogue_.GetStop(stop));
+            }
+            deque_buses_.push_back(move(bus));
+        }
+    }
+}
+
 
 vector<string> InputReader::GetStops(string_view data, bool& is_circle) {
     if (data.find(">") != string::npos) {
@@ -92,4 +120,3 @@ string ReadLine() {
 }
 
 } // InputReader
-

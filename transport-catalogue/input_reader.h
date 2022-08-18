@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_set>
+#include <unordered_map>
 #include <iostream>
 #include <string>
 #include <deque>
@@ -8,38 +8,56 @@
 
 namespace InputReader {
 
-namespace Query {
+namespace Request  {
 
-struct Query {
+struct Request {
     std::string type;
     std::string name;
     std::string data;
 };
 
-} // namespace Quere
+} // namespace Request
+
+namespace DistanceBetweenStops {
+
+struct DistanceBetweenStops {
+    std::string name;
+    std::string stop;
+    uint32_t road_distances;
+};
+
+}
 
 class InputReader {
 public:
     InputReader(TransportCatalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
 
-    void DataInput(const size_t query_count);
+    void ReadInputData(const size_t query_count);
 
-    void AddQuere(const Query::Query&& query);
+private:
+    TransportCatalogue::TransportCatalogue& transport_catalogue_;
+    std::deque<Request::Request> deque_requests_;
+    std::deque<DistanceBetweenStops::DistanceBetweenStops> deque_distance_between_stops_;
+    std::deque<TransportCatalogue::Bus::Bus> deque_buses_;
+    std::deque<TransportCatalogue::Stop::Stop> deque_stops_;
+
+private:
+    void GetStopsFromData();
+
+    void GetBusesFromData();
+
+    void AppendStopsToTransportCatalogue();
+
+    void AppendBusesToTransportCatalogue();
+
 
     std::vector<std::string> GetStops(std::string_view data, bool& is_circle);
 
     std::vector<std::string> SplitIntoWords(std::string_view text, const char symbol);
 
     std::pair<std::string, double> GetDistanceToStop (const std::string& data);
-
-private:
-    TransportCatalogue::TransportCatalogue& transport_catalogue_;
-    std::deque<Query::Query> stops_info;
-    std::deque<Query::Query> deque_buses_;
-
 };
 
 std::string ReadLine();
 
 } // namespace InputReader
-
