@@ -1,7 +1,5 @@
 #include "geo.h"
 
-
-
 bool Coordinates::operator==(const Coordinates& other) const {
     return std::abs(lat - other.lat) < EPSILON && std::abs(lng - other.lng) < EPSILON;
 }

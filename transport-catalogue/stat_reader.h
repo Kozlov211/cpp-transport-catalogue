@@ -6,10 +6,9 @@
 
 namespace StatReader {
 
-namespace Quere {
+namespace Request {
 
-struct Quere {
-    bool is_found = false;
+struct Request  {
     std::string type;
     std::string name;
 };
@@ -20,11 +19,9 @@ class StatReader {
 public:
     StatReader(TransportCatalogue::TransportCatalogue& transport_catalogue) : transport_catalogue(transport_catalogue) {}
 
-    void DefineQuery (const std::string& type, const std::string& name);
-
     TransportCatalogue::TransportCatalogue& transport_catalogue;
 
-    Quere::Quere quere_;
+    Request::Request request;
 
 };
 
