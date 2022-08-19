@@ -1,12 +1,10 @@
+#include <sstream>
+
 #include "map_renderer.h"
 
 using namespace std;
 
 namespace MapRenderer {
-
-void MapRenderer::AppendRenderSettings(const JsonReader::JsonReader& json_reader) {
-    settings_ = json_reader.GetRenderSettings();
-}
 
 void MapRenderer::AppendCoordinates(const std::vector<Coordinates>& geo_coordinates) {
     geo_coordinates_ = geo_coordinates;
@@ -23,23 +21,22 @@ void MapRenderer::BusNameSorting() {
     }
 }
 
-void MapRenderer::RenderMap(ostream& out) {
-    const SphereProjector::SphereProjector proj(geo_coordinates_.begin(), geo_coordinates_.end(), settings_.width, settings_.height, settings_.padding);
-    AppendPolylinesRoutesForMap(proj);
-    AppendRouteNamesForMap(proj);
-    GetAllStops();
-    AppendStopSymbolsForMap(proj);
-    AppendStopNameForMap(proj);
+void MapRenderer::RenderMap(ostream& out, const RenderSettings::RenderSettings& settings) {
+    const SphereProjector::SphereProjector proj(geo_coordinates_.begin(), geo_coordinates_.end(), settings.width, settings.height, settings.padding);
+    VisualizationRouteLines(proj, settings);
+    VisualizationRouteName(proj, settings);
+    VisualizationRouteStops(proj, settings);
+    VisualizationStopName(proj, settings);
     map_.Render(out);
 }
 
-string MapRenderer::GetMapAsString() {
+string MapRenderer::GetMapAsString(const RenderSettings::RenderSettings& settings) {
     std::ostringstream stream;
-    RenderMap(stream);
+    RenderMap(stream, settings);
     return stream.str();
 }
 
-void MapRenderer::AppendPolylinesRoutesForMap(const SphereProjector::SphereProjector& proj) {
+void MapRenderer::VisualizationRouteLines(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
     int color_count = 0;
     for (auto& name : name_of_buses) {
         Svg::Polyline polyline;
@@ -50,8 +47,8 @@ void MapRenderer::AppendPolylinesRoutesForMap(const SphereProjector::SphereProje
         for (auto& stop : stops) {
             polyline.AddPoint(proj(stop->сoordinates))
                     .SetFillColor(Svg::NoneColor)
-                    .SetStrokeColor(settings_.color_palette[color_count % settings_.color_palette.size()])
-                    .SetStrokeWidth(settings_.line_width)
+                    .SetStrokeColor(settings.color_palette[color_count % settings.color_palette.size()])
+                    .SetStrokeWidth(settings.line_width)
                     .SetStrokeLineCap(Svg::StrokeLineCap::ROUND)
                     .SetStrokeLineJoin(Svg::StrokeLineJoin::ROUND);
         }
@@ -59,8 +56,8 @@ void MapRenderer::AppendPolylinesRoutesForMap(const SphereProjector::SphereProje
             for (auto it = stops.rbegin() + 1; it != stops.rend(); ++it) {
                 polyline.AddPoint(proj((*it)->сoordinates))
                         .SetFillColor(Svg::NoneColor)
-                        .SetStrokeColor(settings_.color_palette[color_count % settings_.color_palette.size()])
-                        .SetStrokeWidth(settings_.line_width)
+                        .SetStrokeColor(settings.color_palette[color_count % settings.color_palette.size()])
+                        .SetStrokeWidth(settings.line_width)
                         .SetStrokeLineCap(Svg::StrokeLineCap::ROUND)
                         .SetStrokeLineJoin(Svg::StrokeLineJoin::ROUND);
             }
@@ -70,7 +67,7 @@ void MapRenderer::AppendPolylinesRoutesForMap(const SphereProjector::SphereProje
     }
 }
 
-void MapRenderer::AppendRouteNamesForMap(const SphereProjector::SphereProjector& proj) {
+void MapRenderer::VisualizationRouteName(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
     int color_count = 0;
     for (auto& name : name_of_buses) {
         auto& stops = buses_.at(name)->route;
@@ -79,60 +76,61 @@ void MapRenderer::AppendRouteNamesForMap(const SphereProjector::SphereProjector&
         }
         if (buses_.at(name)->is_circle) {
             Svg::Point point = proj(stops[0]->сoordinates);
-            AppendSubstrateForRoutes(name, point);
-            AppendTitleForRoutes(name, point, settings_.color_palette[color_count % settings_.color_palette.size()]);
+            AppendSubstrateForRoutes(name, point, settings);
+            AppendTitleForRoutes(name, point, settings.color_palette[color_count % settings.color_palette.size()], settings);
         } else {
 
             if (stops[0]->name == stops[stops.size() - 1]->name) {
                 Svg::Point point_stop_1 = proj(stops[0]->сoordinates);
-                AppendSubstrateForRoutes(name, point_stop_1);
-                AppendTitleForRoutes(name, point_stop_1, settings_.color_palette[color_count % settings_.color_palette.size()]);
+                AppendSubstrateForRoutes(name, point_stop_1, settings);
+                AppendTitleForRoutes(name, point_stop_1, settings.color_palette[color_count % settings.color_palette.size()], settings);
             } else {
                 Svg::Point point_stop_1 = proj(stops[0]->сoordinates);
-                AppendSubstrateForRoutes(name, point_stop_1);
-                AppendTitleForRoutes(name, point_stop_1, settings_.color_palette[color_count % settings_.color_palette.size()]);
+                AppendSubstrateForRoutes(name, point_stop_1, settings);
+                AppendTitleForRoutes(name, point_stop_1, settings.color_palette[color_count % settings.color_palette.size()], settings);
                 Svg::Point point_stop_2 = proj(stops[stops.size() - 1]->сoordinates);
-                AppendSubstrateForRoutes(name, point_stop_2);
-                AppendTitleForRoutes(name, point_stop_2, settings_.color_palette[color_count % settings_.color_palette.size()]);
+                AppendSubstrateForRoutes(name, point_stop_2, settings);
+                AppendTitleForRoutes(name, point_stop_2, settings.color_palette[color_count % settings.color_palette.size()], settings);
             }
         }
         ++color_count;
     }
 }
 
-void MapRenderer::AppendSubstrateForRoutes(std::string_view name, const Svg::Point& point) {
+void MapRenderer::AppendSubstrateForRoutes(std::string_view name, const Svg::Point& point, const RenderSettings::RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
-        .SetOffset({settings_.bus_label_offset[0], settings_.bus_label_offset[1]})
-        .SetFontSize(settings_.bus_label_font_size)
+        .SetOffset({settings.bus_label_offset[0], settings.bus_label_offset[1]})
+        .SetFontSize(settings.bus_label_font_size)
         .SetFontFamily("Verdana")
         .SetFontWeight("bold")
         .SetData(string(name))
-        .SetStrokeWidth(settings_.underlayer_width)
+        .SetStrokeWidth(settings.underlayer_width)
         .SetStrokeLineCap(Svg::StrokeLineCap::ROUND)
         .SetStrokeLineJoin(Svg::StrokeLineJoin::ROUND)
-        .SetFillColor(settings_.underlayer_color)
-        .SetStrokeColor(settings_.underlayer_color);
+        .SetFillColor(settings.underlayer_color)
+        .SetStrokeColor(settings.underlayer_color);
     map_.Add(move(text));
 }
 
-void MapRenderer::AppendTitleForRoutes(std::string_view name, const Svg::Point& point,Svg::Color color) {
+void MapRenderer::AppendTitleForRoutes(std::string_view name, const Svg::Point& point,Svg::Color color, const RenderSettings::RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
         .SetFillColor(color)
-        .SetOffset({settings_.bus_label_offset[0], settings_.bus_label_offset[1]})
-        .SetFontSize(settings_.bus_label_font_size)
+        .SetOffset({settings.bus_label_offset[0], settings.bus_label_offset[1]})
+        .SetFontSize(settings.bus_label_font_size)
         .SetFontFamily("Verdana")
         .SetFontWeight("bold")
         .SetData(string(name));
     map_.Add(move(text));
 }
 
-void MapRenderer::AppendStopSymbolsForMap(const SphereProjector::SphereProjector& proj) {
+void MapRenderer::VisualizationRouteStops(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
     Svg::Circle circle;
+    GetAllStops();
     for (auto& stop : all_stops_) {
         circle.SetCenter(proj(stop->сoordinates))
-                .SetRadius(settings_.stop_radius)
+                .SetRadius(settings.stop_radius)
                 .SetFillColor("white");
         map_.Add(move(circle));
     }
@@ -147,34 +145,34 @@ void MapRenderer::GetAllStops() {
     }
 }
 
-void MapRenderer::AppendStopNameForMap(const SphereProjector::SphereProjector& proj) {
+void MapRenderer::VisualizationStopName(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
     for (auto& stop : all_stops_) {
-        AppendSubstrateForNameStop(stop->name, proj(stop->сoordinates));
-        AppendTitleForNameStop(stop->name, proj(stop->сoordinates), "black");
+        AppendSubstrateForNameStop(stop->name, proj(stop->сoordinates), settings);
+        AppendTitleForNameStop(stop->name, proj(stop->сoordinates), "black", settings);
     }
 }
 
-void MapRenderer::AppendSubstrateForNameStop(std::string_view name, const Svg::Point& point) {
+void MapRenderer::AppendSubstrateForNameStop(std::string_view name, const Svg::Point& point, const RenderSettings::RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
-        .SetOffset({settings_.stop_label_offset[0], settings_.stop_label_offset[1]})
-        .SetFontSize(settings_.stop_label_font_size)
+        .SetOffset({settings.stop_label_offset[0], settings.stop_label_offset[1]})
+        .SetFontSize(settings.stop_label_font_size)
         .SetFontFamily("Verdana")
         .SetData(string(name))
-        .SetStrokeWidth(settings_.underlayer_width)
+        .SetStrokeWidth(settings.underlayer_width)
         .SetStrokeLineCap(Svg::StrokeLineCap::ROUND)
         .SetStrokeLineJoin(Svg::StrokeLineJoin::ROUND)
-        .SetFillColor(settings_.underlayer_color)
-        .SetStrokeColor(settings_.underlayer_color);
+        .SetFillColor(settings.underlayer_color)
+        .SetStrokeColor(settings.underlayer_color);
     map_.Add(move(text));
 }
 
-void MapRenderer::AppendTitleForNameStop(std::string_view name, const Svg::Point& point, Svg::Color color) {
+void MapRenderer::AppendTitleForNameStop(std::string_view name, const Svg::Point& point, Svg::Color color, const RenderSettings::RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
         .SetFillColor(color)
-        .SetOffset({settings_.stop_label_offset[0], settings_.stop_label_offset[1]})
-        .SetFontSize(settings_.stop_label_font_size)
+        .SetOffset({settings.stop_label_offset[0], settings.stop_label_offset[1]})
+        .SetFontSize(settings.stop_label_font_size)
         .SetFontFamily("Verdana")
         .SetData(string(name));
     map_.Add(move(text));

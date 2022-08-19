@@ -1,9 +1,16 @@
 #pragma once
 
 #include <algorithm>
+#include <string_view>
+#include <vector>
+#include <set>
+#include <unordered_map>
+#include <string>
+
 
 #include "geo.h"
-#include "json_reader.h"
+#include "transport_catalogue.h"
+#include "svg.h"
 
 namespace SphereProjector {
 
@@ -20,7 +27,7 @@ public:
     }
 
 private:
-    double padding_;
+    double padding_ = 0;
     double min_lon_ = 0;
     double max_lat_ = 0;
     double zoom_coeff_ = 0;
@@ -68,20 +75,37 @@ SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_
 
 namespace MapRenderer {
 
+namespace RenderSettings {
+
+struct RenderSettings {
+    double width;
+    double height;
+    double padding;
+    double line_width;
+    double stop_radius;
+    uint32_t bus_label_font_size;
+    std::vector<double> bus_label_offset;
+    uint32_t stop_label_font_size;
+    std::vector<double> stop_label_offset;
+    Svg::Color underlayer_color;
+    double underlayer_width;
+    std::vector<Svg::Color> color_palette;
+};
+
+} // namespace RenderSettings
+
 class MapRenderer {
 public:
-    void AppendRenderSettings(const JsonReader::JsonReader& json_reader);
 
     void AppendBuses(const std::unordered_map<std::string_view, TransportCatalogue::Bus::Bus*>& buses);
 
     void AppendCoordinates(const std::vector<Coordinates>& geo_coordinates);
 
-    void RenderMap(std::ostream& out);
+    void RenderMap(std::ostream& out, const RenderSettings::RenderSettings& settings);
 
-    std::string GetMapAsString();
+    std::string GetMapAsString(const RenderSettings::RenderSettings& settings);
 
 private:
-    JsonReader::RenderSettings::RenderSettings settings_;
     std::vector<Coordinates> geo_coordinates_;
     std::unordered_map<std::string_view, TransportCatalogue::Bus::Bus*> buses_;
     std::set<std::string_view> name_of_buses;
@@ -93,23 +117,23 @@ private:
 
     void BusNameSorting();
 
-    void AppendPolylinesRoutesForMap(const SphereProjector::SphereProjector& proj);
+    void VisualizationRouteLines(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings);
 
-    void AppendRouteNamesForMap(const SphereProjector::SphereProjector& proj);
+    void VisualizationRouteName(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings);
 
-    void AppendSubstrateForRoutes(std::string_view name, const Svg::Point& point);
+    void AppendSubstrateForRoutes(std::string_view name, const Svg::Point& point, const RenderSettings::RenderSettings& settings);
 
-    void AppendTitleForRoutes(std::string_view name, const Svg::Point& point, Svg::Color color);
+    void AppendTitleForRoutes(std::string_view name, const Svg::Point& point, Svg::Color color, const RenderSettings::RenderSettings& settings);
 
-    void AppendStopSymbolsForMap(const SphereProjector::SphereProjector& proj);
+    void VisualizationRouteStops(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings);
 
     void GetAllStops();
 
-    void AppendStopNameForMap(const SphereProjector::SphereProjector& proj);
+    void VisualizationStopName(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings);
 
-    void AppendSubstrateForNameStop(std::string_view name, const Svg::Point& point);
+    void AppendSubstrateForNameStop(std::string_view name, const Svg::Point& point, const RenderSettings::RenderSettings& settings);
 
-    void AppendTitleForNameStop(std::string_view name, const Svg::Point& point, Svg::Color color);
+    void AppendTitleForNameStop(std::string_view name, const Svg::Point& point, Svg::Color color, const RenderSettings::RenderSettings& settings);
 };
 
 } // namespace MapRenderer

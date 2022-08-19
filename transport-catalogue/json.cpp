@@ -194,18 +194,22 @@ Node LoadNode(istream& input) {
             return LoadArray(input);
         }
         throw ParsingError("Array parsing error");
-    } else if (c == '{') {
+    }
+    if (c == '{') {
         if (input.get(c)) {
             input.unget();
             return LoadDict(input);
         }
         throw ParsingError("Dict parsing error");
-    } else if (c == '"') {
+    }
+    if (c == '"') {
         return LoadString(input);
-    } else if (c == 't' || c == 'f') {
+    }
+    if (c == 't' || c == 'f') {
         input.unget();
         return LoadBool(input);
-    } else if (c == 'n') {
+    }
+    if (c == 'n') {
         input.unget();
         return LoadNull(input);
     } else  {

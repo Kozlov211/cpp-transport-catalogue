@@ -1,4 +1,5 @@
 #include "json_reader.h"
+#include "map_renderer.h"
 
 #include <sstream>
 
@@ -101,6 +102,64 @@ void JsonReader::AppendBusesToTransportCatalogue() {
     }
 }
 
+std::string JsonReader::GetResponseToRequest(MapRenderer::MapRenderer& map_render) {
+    Json::Array response;
+    std::ostringstream out;
+    for (auto& request: deque_requests_) {
+        if (request.type == "Bus") {
+            response.push_back(GetInformationAboutBus(request));
+        } else if (request.type == "Stop" ) {
+            response.push_back(GetInformationAboutStop(request));
+        } else {
+            response.push_back(GetInformationAboutMap(request, map_render));
+        }
+    }
+    Json::Print(Json::Document{response}, out);
+    return out.str();
+}
+
+Json::Dict JsonReader::GetInformationAboutStop(const RequestData::RequestData& request) {
+    Json::Dict information;
+    if (transport_catalogue_.CheckStop(request.name)) {
+        const TransportCatalogue::Stop::Stop* stop = transport_catalogue_.GetStop(request.name);
+        information["request_id"] = request.id;
+        Json::Array buses;
+        for (const auto& bus : transport_catalogue_.GetBusesPassingTheStop(stop->name)) {
+            buses.push_back(string(bus));
+        }
+        information["buses"] = buses;
+        return information;
+    } else {
+        information["error_message"] = "not found"s;
+        information["request_id"] = request.id;
+        return information;
+    }
+}
+
+Json::Dict JsonReader::GetInformationAboutBus(const RequestData::RequestData& request) {
+    Json::Dict information;
+    if (transport_catalogue_.CheckBus(request.name)) {
+        TransportCatalogue::Bus::Bus* bus = transport_catalogue_.GetBus(request.name);
+        information["request_id"] = request.id;
+        information["curvature"] = transport_catalogue_.GetCurvatureRoute(bus);
+        information["route_length"] = transport_catalogue_.GetRoadLength(bus);
+        information["stop_count"] = static_cast<int>(transport_catalogue_.GetNumberStopsOnTheRoute(bus));
+        information["unique_stop_count"] = static_cast<int>(transport_catalogue_.GetNumberUniqueStopsOnTheRoute(bus));
+        return information;
+    } else {
+        information["error_message"] = "not found"s;
+        information["request_id"] = request.id;
+        return information;
+    }
+}
+
+Json::Dict JsonReader::GetInformationAboutMap(const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render) {
+    Json::Dict information;
+    information["request_id"] = request.id;
+    information["map"] = map_render.GetMapAsString(render_settings_);
+    return information;
+}
+
 void JsonReader::GetRequestsFromData() {
     for (const Json::Node& data : json_data_.at("stat_requests"s).AsArray()) {
         const Json::Dict& dict = data.AsMap();
@@ -116,12 +175,5 @@ void JsonReader::GetRequestsFromData() {
     }
 }
 
-const deque<RequestData::RequestData>& JsonReader::GetRequests() const {
-    return deque_requests_;
-}
-
-const RenderSettings::RenderSettings& JsonReader::GetRenderSettings() const {
-    return render_settings_;
-}
 
 } // namespace JsonReader

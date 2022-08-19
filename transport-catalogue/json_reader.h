@@ -3,32 +3,15 @@
 #include <deque>
 #include <unordered_map>
 #include <sstream>
+#include <string>
 
 #include "json.h"
 #include "svg.h"
 #include "transport_catalogue.h"
+#include "map_renderer.h"
 
 
 namespace JsonReader {
-
-namespace RenderSettings {
-
-struct RenderSettings {
-    double width;
-    double height;
-    double padding;
-    double line_width;
-    double stop_radius;
-    uint32_t bus_label_font_size;
-    std::vector<double> bus_label_offset;
-    uint32_t stop_label_font_size;
-    std::vector<double> stop_label_offset;
-    Svg::Color underlayer_color;
-    double underlayer_width;
-    std::vector<Svg::Color> color_palette;
-};
-
-} // namespace RenderSettings
 
 namespace DistanceBetweenStops {
 
@@ -57,11 +40,7 @@ public:
 
     void ReadInputData(std::istream& input);
 
-    std::string GetResponseToRequest();
-
-    const std::deque<RequestData::RequestData>& GetRequests() const;
-
-    const RenderSettings::RenderSettings& GetRenderSettings() const;
+    std::string GetResponseToRequest(MapRenderer::MapRenderer& map_render);
 
 private:
     TransportCatalogue::TransportCatalogue& transport_catalogue_;
@@ -70,7 +49,7 @@ private:
     std::deque<TransportCatalogue::Stop::Stop> deque_stops_;
     std::deque<DistanceBetweenStops::DistanceBetweenStops> deque_distance_between_stops_;
     std::deque<RequestData::RequestData> deque_requests_;
-    RenderSettings::RenderSettings render_settings_;
+    MapRenderer::RenderSettings::RenderSettings render_settings_;
 private:
 
     void GetBusesFromData();
@@ -82,6 +61,12 @@ private:
     void AppendStopsToTransportCatalogue();
 
     void AppendBusesToTransportCatalogue();
+
+    Json::Dict GetInformationAboutStop(const RequestData::RequestData& request);
+
+    Json::Dict GetInformationAboutBus(const RequestData::RequestData& request);
+
+    Json::Dict GetInformationAboutMap(const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render);
 
     void GetRequestsFromData();
 
