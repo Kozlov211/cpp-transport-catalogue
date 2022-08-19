@@ -8,7 +8,6 @@
 #include "geo.h"
 #include "transport_catalogue.h"
 
-
 namespace RequestHandler {
 
 class RequestHandler {
@@ -21,8 +20,6 @@ public:
     void AppendGeoCoordinatesToMapRender();
 
     std::string GetResponseToRequest(JsonReader::JsonReader& json_reader);
-
-    const std::vector<std::string_view>& GetNameBuses();
 
 private:
     TransportCatalogue::TransportCatalogue& transport_catalogue_;

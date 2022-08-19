@@ -10,7 +10,6 @@
 #include "transport_catalogue.h"
 #include "map_renderer.h"
 
-
 namespace JsonReader {
 
 namespace DistanceBetweenStops {
@@ -50,8 +49,8 @@ private:
     std::deque<DistanceBetweenStops::DistanceBetweenStops> deque_distance_between_stops_;
     std::deque<RequestData::RequestData> deque_requests_;
     MapRenderer::RenderSettings::RenderSettings render_settings_;
+    
 private:
-
     void GetBusesFromData();
 
     void GetStopsFromData();

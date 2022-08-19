@@ -24,7 +24,6 @@ void RequestHandler::ReadGeoCoordinatesFromStops() {
     }
 }
 
-
 std::string RequestHandler::GetResponseToRequest(JsonReader::JsonReader& json_reader) {
     return json_reader.GetResponseToRequest(map_render_);
 }
