@@ -15,10 +15,8 @@ int main() {
     json_reader.ReadInputData(cin);
     MapRenderer::MapRenderer map_renderer;
     RequestHandler::RequestHandler request_handler(transport_catalogue, map_renderer);
-    request_handler.AppendRequests(json_reader);
+    request_handler.AppendBusesToMapRender();
     request_handler.AppendGeoCoordinatesToMapRender();
     request_handler.AppendBusesToMapRender();
-    map_renderer.AppendRenderSettings(json_reader);
-    cout << request_handler.GetResponseToRequest() << endl;
+    cout << request_handler.GetResponseToRequest(json_reader) << endl;
 }
-

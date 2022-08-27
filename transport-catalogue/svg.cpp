@@ -171,4 +171,3 @@ void PrintRoots(std::ostream& out, Svg::Rgba rgba) {
 
 }  // namespace svg
 
-

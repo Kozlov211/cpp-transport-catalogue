@@ -1,7 +1,8 @@
+#include <sstream>
+
 #include "json_reader.h"
 #include "map_renderer.h"
-
-#include <sstream>
+#include "json_builder.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ void JsonReader::ReadInputData(istream& input) {
 
 void JsonReader::GetBusesFromData() {
     for (const Json::Node& data : json_data_.at("base_requests"s).AsArray()) {
-        const Json::Dict& dict = data.AsMap();
+        const Json::Dict& dict = data.AsDict();
         if (dict.at("type").AsString() == "Bus") {
             TransportCatalogue::Bus::Bus bus;
             bus.name = dict.at("name").AsString();
@@ -35,12 +36,12 @@ void JsonReader::GetBusesFromData() {
 
 void JsonReader::GetStopsFromData() {
     for (const Json::Node& data : json_data_.at("base_requests"s).AsArray()) {
-        const Json::Dict& dict = data.AsMap();
+        const Json::Dict& dict = data.AsDict();
         if (dict.at("type").AsString() == "Stop") {
             TransportCatalogue::Stop::Stop stop;
             stop.name = dict.at("name").AsString();
             stop.сoordinates = {dict.at("latitude").AsDouble(), dict.at("longitude").AsDouble()};
-            const Json::Dict& dict_road_distances = dict.at("road_distances").AsMap();
+            const Json::Dict& dict_road_distances = dict.at("road_distances").AsDict();
             for (const auto& [key, value] : dict_road_distances) {
                 DistanceBetweenStops::DistanceBetweenStops distance_between_stop;
                 distance_between_stop.name = stop.name;
@@ -55,7 +56,7 @@ void JsonReader::GetStopsFromData() {
 }
 
 void JsonReader::GetRenderSettingsFromData() {
-    Json::Dict map = json_data_.at("render_settings"s).AsMap();
+    Json::Dict map = json_data_.at("render_settings"s).AsDict();
     render_settings_.width = map.at("width").AsDouble();
     render_settings_.height = map.at("height").AsDouble();
     render_settings_.padding = map.at("padding").AsDouble();
@@ -104,65 +105,55 @@ void JsonReader::AppendBusesToTransportCatalogue() {
 
 std::string JsonReader::GetResponseToRequest(MapRenderer::MapRenderer& map_render) {
     Json::Array response;
+    Json::Builder builder;
+    builder.StartArray();
     std::ostringstream out;
     for (auto& request: deque_requests_) {
         if (request.type == "Bus") {
-            response.push_back(GetInformationAboutBus(request));
+            GetInformationAboutBus(builder, request);
         } else if (request.type == "Stop" ) {
-            response.push_back(GetInformationAboutStop(request));
+            GetInformationAboutStop(builder, request);
         } else {
-            response.push_back(GetInformationAboutMap(request, map_render));
+            GetInformationAboutMap(builder, request, map_render);
         }
     }
-    Json::Print(Json::Document{response}, out);
+    Json::Print(Json::Document{builder.EndArray().Build()}, out);
     return out.str();
 }
 
-Json::Dict JsonReader::GetInformationAboutStop(const RequestData::RequestData& request) {
-    Json::Dict information;
+void JsonReader::GetInformationAboutStop(Json::Builder& builder, const RequestData::RequestData& request) {
     if (transport_catalogue_.CheckStop(request.name)) {
         const TransportCatalogue::Stop::Stop* stop = transport_catalogue_.GetStop(request.name);
-        information["request_id"] = request.id;
-        Json::Array buses;
+        builder.StartDict().Key("request_id"s).Value(request.id);
+        builder.Key("buses"s).StartArray();
         for (const auto& bus : transport_catalogue_.GetBusesPassingTheStop(stop->name)) {
-            buses.push_back(string(bus));
+            builder.Value(string(bus));
         }
-        information["buses"] = buses;
-        return information;
+        builder.EndArray().EndDict();
     } else {
-        information["error_message"] = "not found"s;
-        information["request_id"] = request.id;
-        return information;
+        builder.StartDict().Key("error_message"s).Value("not found"s).Key("request_id"s).Value(request.id).EndDict();
     }
 }
 
-Json::Dict JsonReader::GetInformationAboutBus(const RequestData::RequestData& request) {
-    Json::Dict information;
+void JsonReader::GetInformationAboutBus(Json::Builder& builder, const RequestData::RequestData& request) {
     if (transport_catalogue_.CheckBus(request.name)) {
         TransportCatalogue::Bus::Bus* bus = transport_catalogue_.GetBus(request.name);
-        information["request_id"] = request.id;
-        information["curvature"] = transport_catalogue_.GetCurvatureRoute(bus);
-        information["route_length"] = transport_catalogue_.GetRoadLength(bus);
-        information["stop_count"] = static_cast<int>(transport_catalogue_.GetNumberStopsOnTheRoute(bus));
-        information["unique_stop_count"] = static_cast<int>(transport_catalogue_.GetNumberUniqueStopsOnTheRoute(bus));
-        return information;
+        builder.StartDict().Key("request_id"s).Value(request.id).Key("curvature"s).Value(transport_catalogue_.GetCurvatureRoute(bus))
+                .Key("route_length"s).Value(transport_catalogue_.GetRoadLength(bus)).Key("stop_count"s).Value(static_cast<int>(transport_catalogue_.GetNumberStopsOnTheRoute(bus)))
+                .Key("unique_stop_count"s).Value(static_cast<int>(transport_catalogue_.GetNumberUniqueStopsOnTheRoute(bus))).EndDict();
     } else {
-        information["error_message"] = "not found"s;
-        information["request_id"] = request.id;
-        return information;
+        builder.StartDict().Key("error_message"s).Value("not found"s).Key("request_id"s).Value(request.id).EndDict();
     }
 }
 
-Json::Dict JsonReader::GetInformationAboutMap(const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render) {
-    Json::Dict information;
-    information["request_id"] = request.id;
-    information["map"] = map_render.GetMapAsString(render_settings_);
-    return information;
+void JsonReader::GetInformationAboutMap(Json::Builder& builder, const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render) {
+    builder.StartDict().Key("request_id"s).Value(request.id).Key("map"s)
+            .Value(map_render.GetMapAsString(render_settings_)).EndDict();
 }
 
 void JsonReader::GetRequestsFromData() {
     for (const Json::Node& data : json_data_.at("stat_requests"s).AsArray()) {
-        const Json::Dict& dict = data.AsMap();
+        const Json::Dict& dict = data.AsDict();
         if (dict.at("type").AsString() == "Map") {
             deque_requests_.push_back({(dict.at("id").AsInt()),
                                        dict.at("type").AsString(),

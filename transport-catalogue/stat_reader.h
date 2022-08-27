@@ -30,4 +30,3 @@ public:
 std::istream& operator>>(std::istream& is, StatReader::StatReader& reader);
 
 std::ostream& operator<<(std::ostream& is, StatReader::StatReader& reader);
-

@@ -9,6 +9,7 @@
 #include "svg.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
+#include "json_builder.h"
 
 namespace JsonReader {
 
@@ -49,7 +50,7 @@ private:
     std::deque<DistanceBetweenStops::DistanceBetweenStops> deque_distance_between_stops_;
     std::deque<RequestData::RequestData> deque_requests_;
     MapRenderer::RenderSettings::RenderSettings render_settings_;
-    
+
 private:
     void GetBusesFromData();
 
@@ -61,11 +62,11 @@ private:
 
     void AppendBusesToTransportCatalogue();
 
-    Json::Dict GetInformationAboutStop(const RequestData::RequestData& request);
+    void GetInformationAboutStop(Json::Builder& builder, const RequestData::RequestData& request);
 
-    Json::Dict GetInformationAboutBus(const RequestData::RequestData& request);
+    void GetInformationAboutBus(Json::Builder& builder, const RequestData::RequestData& request);
 
-    Json::Dict GetInformationAboutMap(const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render);
+    void GetInformationAboutMap(Json::Builder& builder, const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render);
 
     void GetRequestsFromData();
 

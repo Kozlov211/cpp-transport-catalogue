@@ -51,4 +51,3 @@ std::ostream& operator<<(std::ostream& os, StatReader::StatReader& reader) {
     }
     return os;
 }
-
