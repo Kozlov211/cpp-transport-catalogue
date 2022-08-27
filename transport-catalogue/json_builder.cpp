@@ -1,5 +1,6 @@
-#include "json_builder.h"
 #include <stdexcept>
+
+#include "json_builder.h"
 
 using namespace std;
 
