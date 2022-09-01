@@ -6,9 +6,9 @@
 
 #include "transport_catalogue.h"
 
-namespace InputReader {
+namespace input_reader {
 
-namespace Request  {
+namespace request  {
 
 struct Request {
     std::string type;
@@ -16,9 +16,9 @@ struct Request {
     std::string data;
 };
 
-} // namespace Request
+} // namespace request
 
-namespace DistanceBetweenStops {
+namespace distance_between_stops {
 
 struct DistanceBetweenStops {
     std::string name;
@@ -26,20 +26,23 @@ struct DistanceBetweenStops {
     uint32_t road_distances;
 };
 
-}
+} // namespace distance_between_stops
+
+using namespace request;
+using namespace distance_between_stops;
 
 class InputReader {
 public:
-    InputReader(TransportCatalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
+    InputReader(transport_catalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
 
     void ReadInputData(const size_t query_count);
 
 private:
-    TransportCatalogue::TransportCatalogue& transport_catalogue_;
-    std::deque<Request::Request> deque_requests_;
-    std::deque<DistanceBetweenStops::DistanceBetweenStops> deque_distance_between_stops_;
-    std::deque<TransportCatalogue::Bus::Bus> deque_buses_;
-    std::deque<TransportCatalogue::Stop::Stop> deque_stops_;
+    transport_catalogue::TransportCatalogue& transport_catalogue_;
+    std::deque<Request> deque_requests_;
+    std::deque<DistanceBetweenStops> deque_distance_between_stops_;
+    std::deque<transport_catalogue::bus::Bus> deque_buses_;
+    std::deque<transport_catalogue::stop::Stop> deque_stops_;
 
 private:
     void GetStopsFromData();
@@ -60,4 +63,4 @@ private:
 
 std::string ReadLine();
 
-} // namespace InputReader
+} // namespace input_reader

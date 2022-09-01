@@ -6,7 +6,7 @@
 
 #include "json.h"
 
-namespace Json {
+namespace json {
 
 class DictItemContext;
 
@@ -34,10 +34,10 @@ public:
 
     Builder& EndArray();
 
-    Json::Node& Build();
+    json::Node& Build();
 
 private:
-    Json::Node node_;
+    json::Node node_;
     std::stack<Node*> nodes_stack_;
     std::optional<std::string> key_;
 };
@@ -58,7 +58,7 @@ public:
 
     Builder& EndArray() = delete;
 
-    Json::Node& Build() = delete;
+    json::Node& Build() = delete;
 
 private:
     Builder& builder_;
@@ -80,7 +80,7 @@ public:
 
     Builder& EndArray() = delete;
 
-    Json::Node& Build() = delete;
+    json::Node& Build() = delete;
 
 private:
     Builder& builder_;
@@ -102,7 +102,7 @@ public:
 
     Builder& EndArray();
 
-    Json::Node& Build() = delete;
+    json::Node& Build() = delete;
 
 private:
     Builder& builder_;
@@ -124,7 +124,7 @@ public:
 
     Builder& EndArray() = delete;
 
-    Json::Node& Build() = delete;
+    json::Node& Build() = delete;
 
 private:
     Builder& builder_;
@@ -146,10 +146,10 @@ public:
 
     Builder& EndArray();
 
-    Json::Node& Build() = delete;
+    json::Node& Build() = delete;
 
 private:
     Builder& builder_;
 };
 
-} // namespace Json
+} // namespace json

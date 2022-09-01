@@ -17,9 +17,9 @@ struct Request  {
 
 class StatReader {
 public:
-    StatReader(TransportCatalogue::TransportCatalogue& transport_catalogue) : transport_catalogue(transport_catalogue) {}
+    StatReader(transport_catalogue::TransportCatalogue& transport_catalogue) : transport_catalogue(transport_catalogue) {}
 
-    TransportCatalogue::TransportCatalogue& transport_catalogue;
+    transport_catalogue::TransportCatalogue& transport_catalogue;
 
     Request::Request request;
 

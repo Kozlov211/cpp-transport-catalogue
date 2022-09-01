@@ -16,7 +16,7 @@ void RequestHandler::AppendGeoCoordinatesToMapRender() {
 }
 
 void RequestHandler::ReadGeoCoordinatesFromStops() {
-    const std::unordered_map<std::string_view, TransportCatalogue::Stop::Stop*>& stops = transport_catalogue_.GetStops();
+    const std::unordered_map<std::string_view, transport_catalogue::stop::Stop*>& stops = transport_catalogue_.GetStops();
     for (const auto& [key, value] : stops) {
         if (!transport_catalogue_.GetBusesPassingTheStop(key).empty()){
             geo_coordinates.push_back(value->сoordinates);
@@ -24,7 +24,7 @@ void RequestHandler::ReadGeoCoordinatesFromStops() {
     }
 }
 
-std::string RequestHandler::GetResponseToRequest(JsonReader::JsonReader& json_reader) {
+std::string RequestHandler::GetResponseToRequest(json_reader::JsonReader& json_reader) {
     return json_reader.GetResponseToRequest(map_render_);
 }
 

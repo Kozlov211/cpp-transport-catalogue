@@ -2,7 +2,10 @@
 
 using namespace std;
 
-namespace InputReader {
+namespace input_reader {
+
+using namespace request;
+using namespace distance_between_stops;
 
 void InputReader::ReadInputData(const size_t query_count) {
     for(size_t i = 0; i < query_count; ++i) {
@@ -10,7 +13,7 @@ void InputReader::ReadInputData(const size_t query_count) {
         getline(cin, line);
         size_t space = line.find_first_of(' ');
         size_t point = line.find_first_of(':');
-        Request::Request request;
+        Request request;
         request.type = line.substr(0, space);
         request.name = line.substr(space + 1, point - space - 1);
         request.data = line.substr(point + 2, line.size() - point);
@@ -35,11 +38,11 @@ void InputReader::GetStopsFromData() {
     for (auto& request : deque_requests_) {
         if (request.type == "Stop") {
             vector<string> data = SplitIntoWords(request.data, ',');
-            TransportCatalogue::Stop::Stop stop {request.name, {stod(data[0]), stod(data[1])}};
+            transport_catalogue::stop::Stop stop {request.name, {stod(data[0]), stod(data[1])}};
             pair<string, uint32_t> distance_to_stop;
             for (size_t i = 2; i < data.size(); ++i) {
                 distance_to_stop = GetDistanceToStop(data[i]);
-                DistanceBetweenStops::DistanceBetweenStops distance_between_stop;
+                DistanceBetweenStops distance_between_stop;
                 distance_between_stop.name = request.name;
                 distance_between_stop.stop = distance_to_stop.first;
                 distance_between_stop.road_distances = distance_to_stop.second;
@@ -59,11 +62,10 @@ void InputReader::AppendBusesToTransportCatalogue() {
     }
 }
 
-
 void InputReader::GetBusesFromData() {
     for (auto& request : deque_requests_) {
         if (request.type == "Bus") {
-            TransportCatalogue::Bus::Bus bus;
+            transport_catalogue::bus::Bus bus;
             bus.name = request.name;
             bool is_circle;
             vector<string> route = GetStops(request.data, is_circle);
@@ -119,4 +121,4 @@ string ReadLine() {
     return s;
 }
 
-} // InputReader
+} // input_reader

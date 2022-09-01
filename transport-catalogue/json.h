@@ -6,7 +6,7 @@
 #include <variant>
 #include <vector>
 
-namespace Json {
+namespace json {
 
 class Node;
 using Dict = std::map<std::string, Node>;

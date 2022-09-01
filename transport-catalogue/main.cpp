@@ -1,6 +1,5 @@
 #include <iostream>
 
-
 #include "map_renderer.h"
 #include "json_reader.h"
 #include "json.h"
@@ -9,11 +8,15 @@
 
 using namespace std;
 
+using namespace transport_catalogue;
+using namespace json_reader;
+using namespace map_renderer;
+
 int main() {
-    TransportCatalogue::TransportCatalogue transport_catalogue;
-    JsonReader::JsonReader json_reader(transport_catalogue);
+    TransportCatalogue transport_catalogue;
+    JsonReader json_reader(transport_catalogue);
     json_reader.ReadInputData(cin);
-    MapRenderer::MapRenderer map_renderer;
+    MapRenderer map_renderer;
     RequestHandler::RequestHandler request_handler(transport_catalogue, map_renderer);
     request_handler.AppendBusesToMapRender();
     request_handler.AppendGeoCoordinatesToMapRender();

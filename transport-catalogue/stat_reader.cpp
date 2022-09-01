@@ -24,7 +24,7 @@ std::istream& operator>>(std::istream& is, StatReader::StatReader& reader) {
 std::ostream& operator<<(std::ostream& os, StatReader::StatReader& reader) {
     if (reader.request.type == "Bus") {
         if (reader.transport_catalogue.CheckBus(reader.request.name)) {
-            TransportCatalogue::Bus::Bus* bus = reader.transport_catalogue.GetBus(reader.request.name);
+            transport_catalogue::bus::Bus* bus = reader.transport_catalogue.GetBus(reader.request.name);
             os << "Bus " << bus->name << ": " << reader.transport_catalogue.GetNumberStopsOnTheRoute(bus) << " stops on route, "
                << reader.transport_catalogue.GetNumberUniqueStopsOnTheRoute(bus) << " unique stops, "
                << setprecision(6) << reader.transport_catalogue.GetRoadLength(bus) << " route length, "

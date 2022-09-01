@@ -9,30 +9,30 @@
 
 #include "geo.h"
 
-namespace TransportCatalogue {
+namespace transport_catalogue {
 
-namespace Stop {
+namespace stop {
 
 struct Stop {
     std::string name;
-    Coordinates сoordinates;
+    coordinates::Coordinates сoordinates;
 };
 
 struct CompStop {
     bool operator() (Stop* lhs, Stop* rhs) const;
 };
 
-} // namespace Stop
+} // namespace stop
 
-namespace Bus {
+namespace bus {
 
 struct Bus {
     std::string name;
-    std::vector<Stop::Stop*> route;
+    std::vector<stop::Stop*> route;
     bool is_circle;
 };
 
-} // namespace Bus
+} // namespace bus
 
 namespace RouteData {
 
@@ -46,72 +46,76 @@ struct RouteData {
 
 } // namespace RouteData
 
-namespace Hash {
+namespace hash {
 
 struct Hash {
-    size_t operator() (const std::pair<Stop::Stop*, Stop::Stop*>& pair) const noexcept;
+    size_t operator() (const std::pair<stop::Stop*, stop::Stop*>& pair) const noexcept;
 };
 
 } // namespace Hash
+
+using namespace stop;
+using namespace bus;
+using namespace hash;
 
 class TransportCatalogue {
 public:
     TransportCatalogue() = default;
 
-    void AppendStop(std::string_view name, Stop::Stop* stop);
+    void AppendStop(std::string_view name, Stop* stop);
 
-    void AppendBusToStop(Stop::Stop* stop, Bus::Bus* bus);
+    void AppendBusToStop(Stop* stop, Bus* bus);
 
-    void AppendDistanceToStop(Stop::Stop* name, Stop::Stop* stop, uint32_t distance);
+    void AppendDistanceToStop(Stop* name, Stop* stop, uint32_t distance);
 
-    void AppendBus(std::string_view name, Bus::Bus* bus);
+    void AppendBus(std::string_view name, Bus* bus);
 
-    Stop::Stop* GetStop(std::string_view name);
+    Stop* GetStop(std::string_view name);
 
-    Bus::Bus* GetBus(std::string_view name);
+    Bus* GetBus(std::string_view name);
 
-    size_t GetNumberStopsOnTheRoute(Bus::Bus* bus);
+    size_t GetNumberStopsOnTheRoute(Bus* bus);
 
-    size_t GetNumberUniqueStopsOnTheRoute(Bus::Bus* bus);
+    size_t GetNumberUniqueStopsOnTheRoute(Bus* bus);
 
     bool CheckBus(std::string_view bus);
 
     bool CheckStop(std::string_view stop);
 
-    double GetGeographicLength(Bus::Bus* bus);
+    double GetGeographicLength(Bus* bus);
 
-    double GetRoadLength(Bus::Bus* bus);
+    double GetRoadLength(Bus* bus);
 
-    double GetCurvatureRoute(Bus::Bus* bus); 
+    double GetCurvatureRoute(Bus* bus);
 
     std::set<std::string_view>& GetBusesPassingTheStop(std::string_view stop);
 
-    const std::unordered_map<std::string_view, Bus::Bus*>& GetBuses() const;
+    const std::unordered_map<std::string_view, Bus*>& GetBuses() const;
 
-    const std::unordered_map<std::string_view, Stop::Stop*>& GetStops() const;
+    const std::unordered_map<std::string_view, Stop*>& GetStops() const;
 
 private:
-    std::unordered_map<std::string_view, Stop::Stop*> stops_;
-    std::unordered_map<std::string_view, Bus::Bus*> buses_;
-    std::unordered_map<Bus::Bus*, RouteData::RouteData> route_data;
-    std::unordered_map<std::pair<Stop::Stop*, Stop::Stop*>, uint32_t, Hash::Hash> distance_between_stops_;
+    std::unordered_map<std::string_view, Stop*> stops_;
+    std::unordered_map<std::string_view, Bus*> buses_;
+    std::unordered_map<Bus*, RouteData::RouteData> route_data;
+    std::unordered_map<std::pair<Stop*, Stop*>, uint32_t, Hash> distance_between_stops_;
     std::unordered_map<std::string_view, std::set<std::string_view>> buses_passing_through_stop_;
 
 private:
-    uint32_t GetDistanceToStop(Stop::Stop* name, Stop::Stop* stop);
+    uint32_t GetDistanceToStop(Stop* name, Stop* stop);
 
-    void CountBusStopsOnTheRoute(Bus::Bus* bus);
+    void CountBusStopsOnTheRoute(Bus* bus);
 
-    void CountBusUniqueStopsOnTheRoute(Bus::Bus* bus);
+    void CountBusUniqueStopsOnTheRoute(Bus* bus);
 
-    void CountGeographicLength(Bus::Bus* bus);
+    void CountGeographicLength(Bus* bus);
 
-    void CountRoadLength(Bus::Bus* bus);
+    void CountRoadLength(Bus* bus);
 
-    void CountCurvatureRoute(Bus::Bus* bus);
+    void CountCurvatureRoute(Bus* bus);
 };
 
-} // namespace TransportCatalogue
+} // namespace transport_catalogue
 
 
 

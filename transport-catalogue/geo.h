@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+namespace coordinates {
+
 inline const double EPSILON = 1e-6;
 
 struct Coordinates {
@@ -12,3 +14,5 @@ struct Coordinates {
 };
 
 double ComputeDistance(Coordinates from, Coordinates to);
+
+} // namespace coordinates

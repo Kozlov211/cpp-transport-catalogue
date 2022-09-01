@@ -2,7 +2,7 @@
 
 #include <iterator>
 
-namespace Json {
+namespace json {
 
 using namespace std::literals;
 
@@ -20,7 +20,6 @@ std::string LoadLiteral(std::istream& input) {
 
 Node LoadArray(std::istream& input) {
     std::vector<Node> result;
-
     for (char c; input >> c && c != ']';) {
         if (c != ',') {
             input.putback(c);
@@ -35,7 +34,6 @@ Node LoadArray(std::istream& input) {
 
 Node LoadDict(std::istream& input) {
     Dict dict;
-
     for (char c; input >> c && c != '}';) {
         if (c == '"') {
             std::string key = LoadString(input).AsString();
@@ -125,16 +123,12 @@ Node LoadNull(std::istream& input) {
 
 Node LoadNumber(std::istream& input) {
     std::string parsed_num;
-
-    // Считывает в parsed_num очередной символ из input
     auto read_char = [&parsed_num, &input] {
         parsed_num += static_cast<char>(input.get());
         if (!input) {
             throw ParsingError("Failed to read number from stream"s);
         }
     };
-
-    // Считывает одну или более цифр в parsed_num из input
     auto read_digits = [&input, read_char] {
         if (!std::isdigit(input.peek())) {
             throw ParsingError("A digit is expected"s);
@@ -143,27 +137,20 @@ Node LoadNumber(std::istream& input) {
             read_char();
         }
     };
-
     if (input.peek() == '-') {
         read_char();
     }
-    // Парсим целую часть числа
     if (input.peek() == '0') {
         read_char();
-        // После 0 в JSON не могут идти другие цифры
     } else {
         read_digits();
     }
-
     bool is_int = true;
-    // Парсим дробную часть числа
     if (input.peek() == '.') {
         read_char();
         read_digits();
         is_int = false;
     }
-
-    // Парсим экспоненциальную часть числа
     if (int ch = input.peek(); ch == 'e' || ch == 'E') {
         read_char();
         if (ch = input.peek(); ch == '+' || ch == '-') {
@@ -172,15 +159,12 @@ Node LoadNumber(std::istream& input) {
         read_digits();
         is_int = false;
     }
-
     try {
         if (is_int) {
-            // Сначала пробуем преобразовать строку в int
             try {
                 return std::stoi(parsed_num);
             } catch (...) {
-                // В случае неудачи, например, при переполнении
-                // код ниже попробует преобразовать строку в double
+                return std::stod(parsed_num);
             }
         }
         return std::stod(parsed_num);
@@ -202,12 +186,6 @@ Node LoadNode(std::istream& input) {
         case '"':
             return LoadString(input);
         case 't':
-            // Атрибут [[fallthrough]] (провалиться) ничего не делает, и является
-            // подсказкой компилятору и человеку, что здесь программист явно задумывал
-            // разрешить переход к инструкции следующей ветки case, а не случайно забыл
-            // написать break, return или throw.
-            // В данном случае, встретив t или f, переходим к попытке парсинга
-            // литералов true либо false
             [[fallthrough]];
         case 'f':
             input.putback(c);
@@ -278,10 +256,6 @@ void PrintValue<std::nullptr_t>(const std::nullptr_t&, const PrintContext& ctx) 
     ctx.out << "null"sv;
 }
 
-// В специализаци шаблона PrintValue для типа bool параметр value передаётся
-// по константной ссылке, как и в основном шаблоне.
-// В качестве альтернативы можно использовать перегрузку:
-// void PrintValue(bool value, const PrintContext& ctx);
 template <>
 void PrintValue<bool>(const bool& value, const PrintContext& ctx) {
     ctx.out << (value ? "true"sv : "false"sv);
@@ -337,12 +311,12 @@ void PrintNode(const Node& node, const PrintContext& ctx) {
         node.GetValue());
 }
 
-Json::Document Load(std::istream& input) {
-    return Json::Document{Json::LoadNode(input)};
+json::Document Load(std::istream& input) {
+    return json::Document{json::LoadNode(input)};
 }
 
-void Print(const Json::Document& doc, std::ostream& output) {
-    PrintNode(doc.GetRoot(), Json::PrintContext{output});
+void Print(const json::Document& doc, std::ostream& output) {
+    PrintNode(doc.GetRoot(), json::PrintContext{output});
 }
 
-}  // namespace Json
+}  // namespace json

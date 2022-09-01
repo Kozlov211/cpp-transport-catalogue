@@ -11,9 +11,9 @@
 #include "map_renderer.h"
 #include "json_builder.h"
 
-namespace JsonReader {
+namespace json_reader {
 
-namespace DistanceBetweenStops {
+namespace distance_between_stops {
 
 struct DistanceBetweenStops {
     std::string name;
@@ -21,9 +21,9 @@ struct DistanceBetweenStops {
     uint32_t road_distances;
 };
 
-} // namespace DistanceBetweenStops
+} // namespace distance_between_stops
 
-namespace RequestData {
+namespace request_data {
 
 struct RequestData {
     int id;
@@ -31,25 +31,29 @@ struct RequestData {
     std::string name;
 };
 
-} // namespace RenderDataMap
+} // namespace request_data
+
+using namespace distance_between_stops;
+using namespace request_data;
+using namespace json;
 
 
 class JsonReader {
 public:
-    JsonReader(TransportCatalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
+    JsonReader(transport_catalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
 
     void ReadInputData(std::istream& input);
 
-    std::string GetResponseToRequest(MapRenderer::MapRenderer& map_render);
+    std::string GetResponseToRequest(map_renderer::MapRenderer& map_render);
 
 private:
-    TransportCatalogue::TransportCatalogue& transport_catalogue_;
-    Json::Dict json_data_;
-    std::deque<TransportCatalogue::Bus::Bus> deque_buses_;
-    std::deque<TransportCatalogue::Stop::Stop> deque_stops_;
-    std::deque<DistanceBetweenStops::DistanceBetweenStops> deque_distance_between_stops_;
-    std::deque<RequestData::RequestData> deque_requests_;
-    MapRenderer::RenderSettings::RenderSettings render_settings_;
+    transport_catalogue::TransportCatalogue& transport_catalogue_;
+    Dict json_data_;
+    std::deque<transport_catalogue::bus::Bus> deque_buses_;
+    std::deque<transport_catalogue::stop::Stop> deque_stops_;
+    std::deque<DistanceBetweenStops> deque_distance_between_stops_;
+    std::deque<RequestData> deque_requests_;
+    map_renderer::render_settings::RenderSettings render_settings_;
 
 private:
     void GetBusesFromData();
@@ -62,15 +66,15 @@ private:
 
     void AppendBusesToTransportCatalogue();
 
-    void GetInformationAboutStop(Json::Builder& builder, const RequestData::RequestData& request);
+    void GetInformationAboutStop(Builder& builder, const RequestData& request);
 
-    void GetInformationAboutBus(Json::Builder& builder, const RequestData::RequestData& request);
+    void GetInformationAboutBus(Builder& builder, const RequestData& request);
 
-    void GetInformationAboutMap(Json::Builder& builder, const RequestData::RequestData& request, MapRenderer::MapRenderer& map_render);
+    void GetInformationAboutMap(Builder& builder, const RequestData& request, map_renderer::MapRenderer& map_render);
 
     void GetRequestsFromData();
 
-    std::vector<Svg::Color> GetColorFromArray(const Json::Array& array);
+    std::vector<Svg::Color> GetColorFromArray(const Array& array);
 
     template <typename Type>
     Svg::Color GetColor(const Type& color);
@@ -100,4 +104,4 @@ Svg::Color JsonReader::GetColor(const Type& color) {
     return {rgba};
 }
 
-} // namespace JsonReader
+} // namespace json_reader

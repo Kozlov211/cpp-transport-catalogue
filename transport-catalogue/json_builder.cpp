@@ -4,25 +4,25 @@
 
 using namespace std;
 
-namespace Json {
+namespace json {
 
 DictItemContext Builder::StartDict() {
     DictItemContext context(*this);
     if (node_.GetValue().index() == 0) {
-        node_ = Json::Dict();
+        node_ = Dict();
         nodes_stack_.push(&node_);
         return context;
     }
     if (key_) {
-        Json::Dict& dict = get<Json::Dict>(nodes_stack_.top()->GetValue());
-        dict[*key_] = Json::Dict();
+        Dict& dict = get<Dict>(nodes_stack_.top()->GetValue());
+        dict[*key_] = Dict();
         nodes_stack_.push(&dict[*key_]);
         key_.reset();
         return context;
     }
     if (!nodes_stack_.empty() && nodes_stack_.top()->IsArray()) {
-        Json::Array& array = get<Json::Array>(nodes_stack_.top()->GetValue());
-        array.emplace_back(Json::Dict());
+        Array& array = get<Array>(nodes_stack_.top()->GetValue());
+        array.emplace_back(Dict());
         nodes_stack_.push(&array.back());
         return context;
     }
@@ -44,7 +44,7 @@ KeyItemContext Builder::Key(std::string&& key) {
     if (nodes_stack_.empty() || !nodes_stack_.top()->IsDict() || key_) {
         throw std::logic_error("Error add key");
     }
-    Json::Dict& dict = get<Json::Dict>(nodes_stack_.top()->GetValue());
+    Dict& dict = get<Dict>(nodes_stack_.top()->GetValue());
     key_ = key;
     dict[key];
 
@@ -57,7 +57,7 @@ Builder& Builder::Value(const Node&& node) {
         return *this;
     }
     if (!nodes_stack_.empty() && nodes_stack_.top()->IsArray()) {
-        Json::Array& array = get<Json::Array>(nodes_stack_.top()->GetValue());
+        Array& array = get<Array>(nodes_stack_.top()->GetValue());
         array.emplace_back(move(node));
         if (node.IsArray() || node.IsDict()) {
             nodes_stack_.push(&array.back());
@@ -66,7 +66,7 @@ Builder& Builder::Value(const Node&& node) {
     }
     if (!nodes_stack_.empty() && nodes_stack_.top()->IsDict()) {
         if (key_) {
-            Json::Dict& dict = get<Json::Dict>(nodes_stack_.top()->GetValue());
+            Dict& dict = get<Dict>(nodes_stack_.top()->GetValue());
             dict[*key_] = node;
             if (node.IsArray() || node.IsDict()) {
                 nodes_stack_.push(&dict[*key_]);
@@ -81,20 +81,20 @@ Builder& Builder::Value(const Node&& node) {
 ArrayItemContext Builder::StartArray() {
     ArrayItemContext context(*this);
     if (node_.GetValue().index() == 0) {
-        node_ = Json::Array();
+        node_ = Array();
         nodes_stack_.push(&node_);
         return context;
     }
     if (key_) {
-        Json::Dict& dict = get<Json::Dict>(nodes_stack_.top()->GetValue());
-        dict[*key_] = Json::Array();
+        Dict& dict = get<Dict>(nodes_stack_.top()->GetValue());
+        dict[*key_] = Array();
         nodes_stack_.push(&dict[*key_]);
         key_.reset();
         return context;
     }
     if (!nodes_stack_.empty() && nodes_stack_.top()->IsArray()) {
-        Json::Array& array = get<Json::Array>(nodes_stack_.top()->GetValue());
-        array.emplace_back(Json::Array());
+        Array& array = get<Array>(nodes_stack_.top()->GetValue());
+        array.emplace_back(Array());
         nodes_stack_.push(&array.back());
         return context;
     }
@@ -110,7 +110,7 @@ Builder& Builder::EndArray() {
     return *this;
 }
 
-Json::Node& Builder::Build() {
+json::Node& Builder::Build() {
     if (node_.GetValue().index() == 0 || !nodes_stack_.empty()) {
         throw std::logic_error("Error build Node");
     }
@@ -184,4 +184,4 @@ Builder& ValueItemContextAtherArray::EndArray() {
     return builder_.EndArray();
 }
 
-} // namespace Json
+} // namespace json

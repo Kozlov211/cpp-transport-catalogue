@@ -12,19 +12,19 @@ namespace RequestHandler {
 
 class RequestHandler {
 public:
-    RequestHandler(TransportCatalogue::TransportCatalogue& transport_catalogue, MapRenderer::MapRenderer& map_render)
+    RequestHandler(transport_catalogue::TransportCatalogue& transport_catalogue, map_renderer::MapRenderer& map_render)
         : transport_catalogue_( transport_catalogue), map_render_(map_render) {}
 
     void AppendBusesToMapRender();
 
     void AppendGeoCoordinatesToMapRender();
 
-    std::string GetResponseToRequest(JsonReader::JsonReader& json_reader);
+    std::string GetResponseToRequest(json_reader::JsonReader& json_reader);
 
 private:
-    TransportCatalogue::TransportCatalogue& transport_catalogue_;
-    MapRenderer::MapRenderer& map_render_;
-    std::vector<Coordinates> geo_coordinates;
+    transport_catalogue::TransportCatalogue& transport_catalogue_;
+    map_renderer::MapRenderer& map_render_;
+    std::vector<coordinates::Coordinates> geo_coordinates;
 
 private:
     void ReadGeoCoordinatesFromStops();

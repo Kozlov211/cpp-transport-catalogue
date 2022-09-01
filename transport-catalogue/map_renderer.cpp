@@ -4,13 +4,16 @@
 
 using namespace std;
 
-namespace MapRenderer {
+namespace map_renderer {
 
-void MapRenderer::AppendCoordinates(const std::vector<Coordinates>& geo_coordinates) {
+using namespace sphere_projector;
+using namespace render_settings;
+
+void MapRenderer::AppendCoordinates(const std::vector<coordinates::Coordinates>& geo_coordinates) {
     geo_coordinates_ = geo_coordinates;
 }
 
-void MapRenderer::AppendBuses(const std::unordered_map<std::string_view, TransportCatalogue::Bus::Bus*>& buses) {
+void MapRenderer::AppendBuses(const std::unordered_map<std::string_view, transport_catalogue::bus::Bus*>& buses) {
     buses_ = buses;
     BusNameSorting();
 }
@@ -21,8 +24,8 @@ void MapRenderer::BusNameSorting() {
     }
 }
 
-void MapRenderer::RenderMap(ostream& out, const RenderSettings::RenderSettings& settings) {
-    const SphereProjector::SphereProjector proj(geo_coordinates_.begin(), geo_coordinates_.end(), settings.width, settings.height, settings.padding);
+void MapRenderer::RenderMap(ostream& out, const RenderSettings& settings) {
+    const SphereProjector proj(geo_coordinates_.begin(), geo_coordinates_.end(), settings.width, settings.height, settings.padding);
     VisualizationRouteLines(proj, settings);
     VisualizationRouteName(proj, settings);
     VisualizationRouteStops(proj, settings);
@@ -30,13 +33,13 @@ void MapRenderer::RenderMap(ostream& out, const RenderSettings::RenderSettings& 
     map_.Render(out);
 }
 
-string MapRenderer::GetMapAsString(const RenderSettings::RenderSettings& settings) {
+string MapRenderer::GetMapAsString(const RenderSettings& settings) {
     std::ostringstream stream;
     RenderMap(stream, settings);
     return stream.str();
 }
 
-void MapRenderer::VisualizationRouteLines(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::VisualizationRouteLines(const SphereProjector& proj, const RenderSettings& settings) {
     int color_count = 0;
     for (auto& name : name_of_buses) {
         Svg::Polyline polyline;
@@ -67,7 +70,7 @@ void MapRenderer::VisualizationRouteLines(const SphereProjector::SphereProjector
     }
 }
 
-void MapRenderer::VisualizationRouteName(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::VisualizationRouteName(const SphereProjector& proj, const RenderSettings& settings) {
     int color_count = 0;
     for (auto& name : name_of_buses) {
         auto& stops = buses_.at(name)->route;
@@ -97,7 +100,7 @@ void MapRenderer::VisualizationRouteName(const SphereProjector::SphereProjector&
     }
 }
 
-void MapRenderer::AppendSubstrateForRoutes(std::string_view name, const Svg::Point& point, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::AppendSubstrateForRoutes(std::string_view name, const Svg::Point& point, const RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
         .SetOffset({settings.bus_label_offset[0], settings.bus_label_offset[1]})
@@ -113,7 +116,7 @@ void MapRenderer::AppendSubstrateForRoutes(std::string_view name, const Svg::Poi
     map_.Add(move(text));
 }
 
-void MapRenderer::AppendTitleForRoutes(std::string_view name, const Svg::Point& point,Svg::Color color, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::AppendTitleForRoutes(std::string_view name, const Svg::Point& point,Svg::Color color, const RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
         .SetFillColor(color)
@@ -125,7 +128,7 @@ void MapRenderer::AppendTitleForRoutes(std::string_view name, const Svg::Point& 
     map_.Add(move(text));
 }
 
-void MapRenderer::VisualizationRouteStops(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::VisualizationRouteStops(const SphereProjector& proj, const RenderSettings& settings) {
     Svg::Circle circle;
     GetAllStops();
     for (auto& stop : all_stops_) {
@@ -145,14 +148,14 @@ void MapRenderer::GetAllStops() {
     }
 }
 
-void MapRenderer::VisualizationStopName(const SphereProjector::SphereProjector& proj, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::VisualizationStopName(const SphereProjector& proj, const RenderSettings& settings) {
     for (auto& stop : all_stops_) {
         AppendSubstrateForNameStop(stop->name, proj(stop->сoordinates), settings);
         AppendTitleForNameStop(stop->name, proj(stop->сoordinates), "black", settings);
     }
 }
 
-void MapRenderer::AppendSubstrateForNameStop(std::string_view name, const Svg::Point& point, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::AppendSubstrateForNameStop(std::string_view name, const Svg::Point& point, const RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
         .SetOffset({settings.stop_label_offset[0], settings.stop_label_offset[1]})
@@ -167,7 +170,7 @@ void MapRenderer::AppendSubstrateForNameStop(std::string_view name, const Svg::P
     map_.Add(move(text));
 }
 
-void MapRenderer::AppendTitleForNameStop(std::string_view name, const Svg::Point& point, Svg::Color color, const RenderSettings::RenderSettings& settings) {
+void MapRenderer::AppendTitleForNameStop(std::string_view name, const Svg::Point& point, Svg::Color color, const RenderSettings& settings) {
     Svg::Text text;
     text.SetPosition(point)
         .SetFillColor(color)
@@ -179,4 +182,4 @@ void MapRenderer::AppendTitleForNameStop(std::string_view name, const Svg::Point
 }
 
 
-} // namespace MapRenderer
+} // namespace map_renderer
