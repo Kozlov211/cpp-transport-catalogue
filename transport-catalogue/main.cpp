@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "map_renderer.h"
 #include "json_reader.h"
@@ -15,7 +16,7 @@ using namespace map_renderer;
 int main() {
     TransportCatalogue transport_catalogue;
     JsonReader json_reader(transport_catalogue);
-    json_reader.ReadInputData(cin);
+    json_reader.ReadJson(cin);
     MapRenderer map_renderer;
     RequestHandler::RequestHandler request_handler(transport_catalogue, map_renderer);
     request_handler.AppendBusesToMapRender();

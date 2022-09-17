@@ -16,6 +16,7 @@ namespace stop {
 struct Stop {
     std::string name;
     coordinates::Coordinates сoordinates;
+    size_t index;
 };
 
 struct CompStop {
@@ -66,21 +67,21 @@ public:
 
     void AppendBusToStop(Stop* stop, Bus* bus);
 
-    void AppendDistanceToStop(Stop* name, Stop* stop, uint32_t distance);
+    void AppendDistanceToStop(Stop* name, Stop* stop, size_t distance);
 
     void AppendBus(std::string_view name, Bus* bus);
 
-    Stop* GetStop(std::string_view name);
+    Stop* GetStop(std::string_view name) const;
 
-    Bus* GetBus(std::string_view name);
+    Bus* GetBus(std::string_view name) const;
 
     size_t GetNumberStopsOnTheRoute(Bus* bus);
 
     size_t GetNumberUniqueStopsOnTheRoute(Bus* bus);
 
-    bool CheckBus(std::string_view bus);
+    bool CheckBus(std::string_view bus) const;
 
-    bool CheckStop(std::string_view stop);
+    bool CheckStop(std::string_view stop) const;
 
     double GetGeographicLength(Bus* bus);
 
@@ -88,22 +89,24 @@ public:
 
     double GetCurvatureRoute(Bus* bus);
 
-    std::set<std::string_view>& GetBusesPassingTheStop(std::string_view stop);
+    const std::set<std::string_view>& GetBusesPassingTheStop(std::string_view stop) const;
 
     const std::unordered_map<std::string_view, Bus*>& GetBuses() const;
 
     const std::unordered_map<std::string_view, Stop*>& GetStops() const;
 
+    const std::unordered_map<std::pair<Stop*, Stop*>, size_t, Hash> GetDistanceBetweenStops() const;
+
+    uint32_t GetDistanceToStop(Stop* from_stop, Stop* to_stop) const;
+
 private:
     std::unordered_map<std::string_view, Stop*> stops_;
     std::unordered_map<std::string_view, Bus*> buses_;
     std::unordered_map<Bus*, RouteData::RouteData> route_data;
-    std::unordered_map<std::pair<Stop*, Stop*>, uint32_t, Hash> distance_between_stops_;
+    std::unordered_map<std::pair<Stop*, Stop*>, size_t, Hash> distance_between_stops_;
     std::unordered_map<std::string_view, std::set<std::string_view>> buses_passing_through_stop_;
 
 private:
-    uint32_t GetDistanceToStop(Stop* name, Stop* stop);
-
     void CountBusStopsOnTheRoute(Bus* bus);
 
     void CountBusUniqueStopsOnTheRoute(Bus* bus);

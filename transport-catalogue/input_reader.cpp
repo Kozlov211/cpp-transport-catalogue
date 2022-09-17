@@ -29,7 +29,7 @@ void InputReader::AppendStopsToTransportCatalogue() {
     for (auto& stop : deque_stops_) {
         transport_catalogue_.AppendStop(stop.name, &stop);
     }
-    for (auto& stop : deque_distance_between_stops_) {
+    for (const auto& stop : deque_distance_between_stops_) {
         transport_catalogue_.AppendDistanceToStop(transport_catalogue_.GetStop(stop.name), transport_catalogue_.GetStop(stop.stop), stop.road_distances);
     }
 }

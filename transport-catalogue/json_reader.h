@@ -4,16 +4,16 @@
 #include <unordered_map>
 #include <sstream>
 #include <string>
+#include <variant>
 
 #include "json.h"
 #include "svg.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
 #include "json_builder.h"
+#include "transport_router.h"
 
 namespace json_reader {
-
-namespace distance_between_stops {
 
 struct DistanceBetweenStops {
     std::string name;
@@ -21,30 +21,34 @@ struct DistanceBetweenStops {
     uint32_t road_distances;
 };
 
-} // namespace distance_between_stops
+struct RequestMap {
+    int id;
+};
 
-namespace request_data {
-
-struct RequestData {
+struct RequestBusOrStop {
     int id;
     std::string type;
     std::string name;
 };
 
-} // namespace request_data
+struct RequestRoute {
+    int id;
+    std::string from;
+    std::string to;
+};
 
-using namespace distance_between_stops;
-using namespace request_data;
 using namespace json;
-
+using RequestData = std::variant<RequestMap, RequestBusOrStop, RequestRoute>;
 
 class JsonReader {
 public:
     JsonReader(transport_catalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
 
-    void ReadInputData(std::istream& input);
+    void ReadJson(std::istream& input);
 
     std::string GetResponseToRequest(map_renderer::MapRenderer& map_render);
+
+    void AppendDataToTransportCatalogue();
 
 private:
     transport_catalogue::TransportCatalogue& transport_catalogue_;
@@ -54,25 +58,38 @@ private:
     std::deque<DistanceBetweenStops> deque_distance_between_stops_;
     std::deque<RequestData> deque_requests_;
     map_renderer::render_settings::RenderSettings render_settings_;
+    transport_router::RoutingSettings routing_settings_;
 
 private:
-    void GetBusesFromData();
+    void GetBusesFromJson();
 
-    void GetStopsFromData();
+    void GetStopsFromJson();
 
-    void GetRenderSettingsFromData();
+    void GetRenderSettingsFromJson();
+
+    void GetRequestsFromJson();
+
+    void GetRoutingSettingsFromJson();
 
     void AppendStopsToTransportCatalogue();
 
+    void AppendDistanceBetweenStopsToTransportCatalogue();
+
     void AppendBusesToTransportCatalogue();
 
-    void GetInformationAboutStop(Builder& builder, const RequestData& request);
+    void BuildJsonStop(Builder& builder, const RequestBusOrStop& request);
 
-    void GetInformationAboutBus(Builder& builder, const RequestData& request);
+    void BuildJsonBus(Builder& builder, const RequestBusOrStop& request);
 
-    void GetInformationAboutMap(Builder& builder, const RequestData& request, map_renderer::MapRenderer& map_render);
+    void BuildJsonMap(Builder& builder, const RequestMap& request, map_renderer::MapRenderer& map_render);
 
-    void GetRequestsFromData();
+    void BuildJsonRoute(Builder& builder, const RequestRoute& request, const transport_router::TransportRouter& transport_router);
+    \
+    void BuildJsonBusEdge(Builder& builder, const transport_router::BusEdgeInfo& bus_edge_info);
+
+    void BuildJsonWaitEdge(Builder& builder, const transport_router::WaitEdgeInfo& wait_edge_info);
+
+    void BuildJsonErrorMessage(Builder& builder, const int request_id);
 
     std::vector<Svg::Color> GetColorFromArray(const Array& array);
 
@@ -105,3 +122,4 @@ Svg::Color JsonReader::GetColor(const Type& color) {
 }
 
 } // namespace json_reader
+

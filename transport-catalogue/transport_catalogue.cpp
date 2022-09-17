@@ -16,7 +16,7 @@ void TransportCatalogue::AppendBusToStop (Stop* stop, Bus* bus) {
     buses_passing_through_stop_[stop->name].insert(bus->name);
 }
 
-void TransportCatalogue::AppendDistanceToStop (Stop* name, Stop* stop, uint32_t distance) {
+void TransportCatalogue::AppendDistanceToStop (Stop* name, Stop* stop, size_t distance) {
     distance_between_stops_[{name, stop}] = distance;
 }
 
@@ -24,14 +24,12 @@ void TransportCatalogue::AppendBus(string_view name, Bus* bus) {
     buses_[name] = bus;
 }
 
-Stop* TransportCatalogue::GetStop(string_view name) {
-    static Stop* empty;
-    return CheckStop(name) ? stops_.at(name) : empty;
+Stop* TransportCatalogue::GetStop(string_view name) const {
+    return stops_.at(name);
 }
 
-Bus* TransportCatalogue::GetBus(string_view name) {
-    static Bus* empty;
-    return CheckBus(name) ? buses_.at(name) : empty;
+Bus* TransportCatalogue::GetBus(string_view name) const {
+    return buses_.at(name);
 }
 
 size_t TransportCatalogue::GetNumberStopsOnTheRoute(Bus* bus) {
@@ -59,11 +57,11 @@ void TransportCatalogue::CountBusUniqueStopsOnTheRoute(Bus* bus) {
     route_data[bus].uniq_stops = unique_stops.size();
 }
 
-bool TransportCatalogue::CheckBus(string_view bus) {
+bool TransportCatalogue::CheckBus(string_view bus) const {
     return buses_.count(bus);
 }
 
-bool TransportCatalogue::CheckStop(string_view  stop) {
+bool TransportCatalogue::CheckStop(string_view  stop) const {
     return stops_.count(stop);
 }
 
@@ -83,11 +81,11 @@ void TransportCatalogue::CountGeographicLength(Bus* bus) {
     route_data[bus].geographic_legth = bus->is_circle ? route_length : route_length * 2;
 }
 
-uint32_t TransportCatalogue::GetDistanceToStop(Stop* name, Stop* stop) {
-    if (distance_between_stops_.count({name, stop})) {
-        return distance_between_stops_[{name, stop}];
+uint32_t TransportCatalogue::GetDistanceToStop(Stop* from_stop, Stop* to_stop) const {
+    if (distance_between_stops_.count({from_stop, to_stop})) {
+        return distance_between_stops_.at({from_stop, to_stop});
     } else {
-        return distance_between_stops_[{stop, name}];
+        return distance_between_stops_.at({to_stop, from_stop});
     }
 }
 
@@ -127,7 +125,7 @@ void TransportCatalogue::CountCurvatureRoute(Bus* bus) {
     route_data[bus].curvature_route = GetRoadLength(bus) / GetGeographicLength(bus);
 }
 
-set<string_view>& TransportCatalogue::GetBusesPassingTheStop(string_view stop) {
+const set<string_view>& TransportCatalogue::GetBusesPassingTheStop(string_view stop) const{
     static set<string_view> empty;
     return buses_passing_through_stop_.count(stop) ? buses_passing_through_stop_.at(stop) : empty;
 }
@@ -140,11 +138,20 @@ const std::unordered_map<std::string_view, Stop*>& TransportCatalogue::GetStops(
     return stops_;
 }
 
+const std::unordered_map<std::pair<Stop*, Stop*>, size_t, Hash> TransportCatalogue::GetDistanceBetweenStops() const {
+    return distance_between_stops_;
+}
+
+
+namespace hash {
+
 size_t Hash::operator() (const std::pair<stop::Stop*, stop::Stop*>& pair) const noexcept {
     std::size_t h1 = std::hash<std::uint32_t>{}(reinterpret_cast<size_t>(pair.first));
     std::size_t h2 = std::hash<std::uint32_t>{}(reinterpret_cast<size_t>(pair.second));
     return h1 ^ (h2 << 1);
 }
+
+} // namespace hash
 
 namespace stop {
 

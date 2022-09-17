@@ -100,7 +100,7 @@ using namespace render_settings;
 class MapRenderer {
 public:
 
-    void AppendBuses(const std::unordered_map<std::string_view, transport_catalogue::bus::Bus*>& buses);
+    void AppendBuses(const std::unordered_map<std::string_view, transport_catalogue::bus::Bus*> buses);
 
     void AppendCoordinates(const std::vector<coordinates::Coordinates>& geo_coordinates);
 

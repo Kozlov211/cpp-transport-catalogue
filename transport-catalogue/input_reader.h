@@ -23,7 +23,7 @@ namespace distance_between_stops {
 struct DistanceBetweenStops {
     std::string name;
     std::string stop;
-    uint32_t road_distances;
+    size_t road_distances;
 };
 
 } // namespace distance_between_stops

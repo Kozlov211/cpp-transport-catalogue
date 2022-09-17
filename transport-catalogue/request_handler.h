@@ -12,7 +12,7 @@ namespace RequestHandler {
 
 class RequestHandler {
 public:
-    RequestHandler(transport_catalogue::TransportCatalogue& transport_catalogue, map_renderer::MapRenderer& map_render)
+    RequestHandler(const transport_catalogue::TransportCatalogue& transport_catalogue, map_renderer::MapRenderer& map_render)
         : transport_catalogue_( transport_catalogue), map_render_(map_render) {}
 
     void AppendBusesToMapRender();
@@ -22,7 +22,7 @@ public:
     std::string GetResponseToRequest(json_reader::JsonReader& json_reader);
 
 private:
-    transport_catalogue::TransportCatalogue& transport_catalogue_;
+    const transport_catalogue::TransportCatalogue& transport_catalogue_;
     map_renderer::MapRenderer& map_render_;
     std::vector<coordinates::Coordinates> geo_coordinates;
 

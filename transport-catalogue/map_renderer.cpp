@@ -13,8 +13,8 @@ void MapRenderer::AppendCoordinates(const std::vector<coordinates::Coordinates>&
     geo_coordinates_ = geo_coordinates;
 }
 
-void MapRenderer::AppendBuses(const std::unordered_map<std::string_view, transport_catalogue::bus::Bus*>& buses) {
-    buses_ = buses;
+void MapRenderer::AppendBuses(const std::unordered_map<std::string_view, transport_catalogue::bus::Bus*> buses) {
+    buses_ = move(buses);
     BusNameSorting();
 }
 
