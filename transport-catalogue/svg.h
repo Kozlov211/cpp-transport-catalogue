@@ -9,7 +9,7 @@
 #include <vector>
 #include <variant>
 
-namespace Svg {
+namespace svg {
 
 struct Point {
     Point() = default;
@@ -69,11 +69,11 @@ enum class StrokeLineJoin {
     ROUND,
 };
 
-std::ostream& operator<< (std::ostream& out, Svg::Point point);
+std::ostream& operator<< (std::ostream& out, svg::Point point);
 
-std::ostream& operator<< (std::ostream& out, Svg::StrokeLineCap line_cap);
+std::ostream& operator<< (std::ostream& out, svg::StrokeLineCap line_cap);
 
-std::ostream& operator<< (std::ostream& out, Svg::StrokeLineJoin line_join);
+std::ostream& operator<< (std::ostream& out, svg::StrokeLineJoin line_join);
 
 struct Rgb {
     explicit Rgb(uint8_t red_in = 0, uint8_t green_in = 0, uint8_t blue_in = 0) : red(red_in), green(green_in), blue(blue_in) {}
@@ -94,7 +94,7 @@ struct Rgba {
     double opacity;
 };
 
-using Color = std::variant<std::monostate, std::string, Svg::Rgb, Svg::Rgba>;
+using Color = std::variant<std::monostate, std::string, svg::Rgb, svg::Rgba>;
 
 inline const std::string NoneColor{"none"};
 
@@ -104,9 +104,9 @@ void PrintRoots(std::ostream& out, std::monostate);
 
 void PrintRoots(std::ostream& out, std::string str);
 
-void PrintRoots(std::ostream& out, Svg::Rgb rgb);
+void PrintRoots(std::ostream& out, svg::Rgb rgb);
 
-void PrintRoots(std::ostream& out, Svg::Rgba rgba);
+void PrintRoots(std::ostream& out, svg::Rgba rgba);
 
 
 template <typename Owner>

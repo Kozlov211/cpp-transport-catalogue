@@ -1,35 +1,41 @@
 #pragma once
 
-#include <set>
-#include <string>
-
 #include "json_reader.h"
+#include "json_builder.h"
 #include "map_renderer.h"
-#include "geo.h"
+#include "domain.h"
 #include "transport_catalogue.h"
+#include "transport_router.h"
 
-namespace RequestHandler {
+
+namespace request_handler {
 
 class RequestHandler {
 public:
-    RequestHandler(const transport_catalogue::TransportCatalogue& transport_catalogue, map_renderer::MapRenderer& map_render)
-        : transport_catalogue_( transport_catalogue), map_render_(map_render) {}
+    RequestHandler(std::deque<domain::RequestData>&& requests) : requests_(move(requests)) {}
 
-    void AppendBusesToMapRender();
-
-    void AppendGeoCoordinatesToMapRender();
-
-    std::string GetResponseToRequest(json_reader::JsonReader& json_reader);
+    std::string GetResponseToRequest(const transport_catalogue::TransportCatalogue& transport_catalogue,
+                                     const map_renderer::MapRenderer& map_renderer,
+                                     const transport_router::TransportRouter& transport_router);
 
 private:
-    const transport_catalogue::TransportCatalogue& transport_catalogue_;
-    map_renderer::MapRenderer& map_render_;
-    std::vector<coordinates::Coordinates> geo_coordinates;
+    std::deque<domain::RequestData> requests_;
 
 private:
-    void ReadGeoCoordinatesFromStops();
+    void BuildJsonStop(json::Builder& builder, const transport_catalogue::TransportCatalogue& transport_catalogue, const domain::RequestBusOrStop& request) const;
 
-    void ReadNameBusesFromBuses();
+    void BuildJsonBus(json::Builder& builder, const transport_catalogue::TransportCatalogue& transport_catalogue, const domain::RequestBusOrStop& request) const;
+
+    void BuildJsonMap(json::Builder& builder, const transport_catalogue::TransportCatalogue& transport_catalogue, const domain::RequestMap& request, const map_renderer::MapRenderer& map_renderer) const;
+
+    void BuildJsonRoute(json::Builder& builder, const transport_catalogue::TransportCatalogue& transport_catalogue, const domain::RequestRoute& request, const transport_router::TransportRouter& transport_router) const;
+
+    void BuildJsonBusEdge(json::Builder& builder, const domain::BusEdgeInfo& bus_edge_info) const;
+
+    void BuildJsonWaitEdge(json::Builder& builder, const domain::WaitEdgeInfo& wait_edge_info) const;
+
+    void BuildJsonErrorMessage(json::Builder& builder, const int request_id) const;
+
 };
 
 } // namespace RequestHandler

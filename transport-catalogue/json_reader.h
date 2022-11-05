@@ -1,104 +1,67 @@
 #pragma once
 
 #include <deque>
-#include <unordered_map>
 #include <sstream>
 #include <string>
 #include <variant>
+#include <unordered_map>
 
+#include "map_renderer.h"
+#include "json_builder.h"
 #include "json.h"
 #include "svg.h"
 #include "transport_catalogue.h"
-#include "map_renderer.h"
-#include "json_builder.h"
 #include "transport_router.h"
 
 namespace json_reader {
 
-struct DistanceBetweenStops {
-    std::string name;
-    std::string stop;
-    uint32_t road_distances;
-};
-
-struct RequestMap {
-    int id;
-};
-
-struct RequestBusOrStop {
-    int id;
-    std::string type;
-    std::string name;
-};
-
-struct RequestRoute {
-    int id;
-    std::string from;
-    std::string to;
-};
-
-using namespace json;
-using RequestData = std::variant<RequestMap, RequestBusOrStop, RequestRoute>;
-
 class JsonReader {
 public:
-    JsonReader(transport_catalogue::TransportCatalogue& transport_catalogue) : transport_catalogue_(transport_catalogue) {};
+    JsonReader(std::istream& input);
 
-    void ReadJson(std::istream& input);
+    void AppendDataToTransportCatalogue(transport_catalogue::TransportCatalogue& transport_catalogue);
 
-    std::string GetResponseToRequest(map_renderer::MapRenderer& map_render);
+    domain::RenderSettings GetRenderSettings();
 
-    void AppendDataToTransportCatalogue();
+    domain::RoutingSettings GetRoutingSettings();
 
-private:
-    transport_catalogue::TransportCatalogue& transport_catalogue_;
-    Dict json_data_;
-    std::deque<transport_catalogue::bus::Bus> deque_buses_;
-    std::deque<transport_catalogue::stop::Stop> deque_stops_;
-    std::deque<DistanceBetweenStops> deque_distance_between_stops_;
-    std::deque<RequestData> deque_requests_;
-    map_renderer::render_settings::RenderSettings render_settings_;
-    transport_router::RoutingSettings routing_settings_;
+    std::deque<domain::RequestData> GetRequestData();
+
+    domain::SerializationSettings GetSerializationSettings();
+
+    std::string GetResponseToRequest(const transport_catalogue::TransportCatalogue& transport_catalogue, const map_renderer::MapRenderer& map_render) const;
 
 private:
-    void GetBusesFromJson();
+    json::Dict json_data_;
+    std::deque<domain::DistanceBetweenStops> deque_distance_between_stops_;
 
-    void GetStopsFromJson();
+private:
+    void AppendBusesToTransportCatalogue(transport_catalogue::TransportCatalogue& transport_catalogue);
 
-    void GetRenderSettingsFromJson();
+    void AppendStopsToTransportCatalogue(transport_catalogue::TransportCatalogue& transport_catalogue);
 
-    void GetRequestsFromJson();
+    void AppendDistanceBetweenStopsToTransportCatalogue(transport_catalogue::TransportCatalogue& transport_catalogue);
 
-    void GetRoutingSettingsFromJson();
+    void AppendRenderSettingsToTransportCatalogue(transport_catalogue::TransportCatalogue& transport_catalogue);
 
-    void AppendStopsToTransportCatalogue();
+    void AppendRoutingSettingsToTransportCatalogue(transport_catalogue::TransportCatalogue& transport_catalogue);
 
-    void AppendDistanceBetweenStopsToTransportCatalogue();
+    domain::RenderSettings GetRenderSettingsFromJson();
 
-    void AppendBusesToTransportCatalogue();
+    domain::RoutingSettings GetRoutingSettingsFromJson();
 
-    void BuildJsonStop(Builder& builder, const RequestBusOrStop& request);
+    domain::SerializationSettings GetSerializationSettingsFromJson();
 
-    void BuildJsonBus(Builder& builder, const RequestBusOrStop& request);
+    std::deque<domain::RequestData> GetRequestDataFromJson();
 
-    void BuildJsonMap(Builder& builder, const RequestMap& request, map_renderer::MapRenderer& map_render);
-
-    void BuildJsonRoute(Builder& builder, const RequestRoute& request, const transport_router::TransportRouter& transport_router);
-    \
-    void BuildJsonBusEdge(Builder& builder, const transport_router::BusEdgeInfo& bus_edge_info);
-
-    void BuildJsonWaitEdge(Builder& builder, const transport_router::WaitEdgeInfo& wait_edge_info);
-
-    void BuildJsonErrorMessage(Builder& builder, const int request_id);
-
-    std::vector<Svg::Color> GetColorFromArray(const Array& array);
+    std::vector<svg::Color> GetColorFromArray(const json::Array& array);
 
     template <typename Type>
-    Svg::Color GetColor(const Type& color);
+    svg::Color GetColor(const Type& color);
 };
 
 template <typename Type>
-Svg::Color JsonReader::GetColor(const Type& color) {
+svg::Color JsonReader::GetColor(const Type& color) {
     if (color.IsString()) {
         return {color.AsString()};
     }
@@ -107,14 +70,14 @@ Svg::Color JsonReader::GetColor(const Type& color) {
         for (auto& value : color.AsArray()) {
             color_parts.push_back(value.AsInt());
         }
-        Svg::Rgb rgb{color_parts[0], color_parts[1], color_parts[2]};
+        svg::Rgb rgb{color_parts[0], color_parts[1], color_parts[2]};
         return {rgb};
     }
     std::vector<double> color_parts;
     for (auto& value : color.AsArray()) {
         color_parts.push_back(value.AsDouble());
     }
-    Svg::Rgba rgba {static_cast<uint8_t>(color_parts[0]),
+    svg::Rgba rgba {static_cast<uint8_t>(color_parts[0]),
                     static_cast<uint8_t>(color_parts[1]),
                     static_cast<uint8_t>(color_parts[2]),
                     static_cast<double>(color_parts[3])};
@@ -122,4 +85,3 @@ Svg::Color JsonReader::GetColor(const Type& color) {
 }
 
 } // namespace json_reader
-

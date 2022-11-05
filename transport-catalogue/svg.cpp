@@ -2,7 +2,7 @@
 
 using namespace std;
 
-namespace Svg {
+namespace svg {
 
 using namespace std::literals;
 
@@ -114,15 +114,15 @@ void Document::Render(ostream& out) const {
     out << "</svg>" << endl;
 }
 
-ostream& operator<< (ostream& out, Svg::Point point) {
+ostream& operator<< (ostream& out, svg::Point point) {
     out << point.x << ","sv << point.y;
     return out;
 }
 
-ostream& operator<< (ostream& out, Svg::StrokeLineCap line_cap) {
-    if (line_cap == Svg::StrokeLineCap::BUTT) {
+ostream& operator<< (ostream& out, svg::StrokeLineCap line_cap) {
+    if (line_cap == svg::StrokeLineCap::BUTT) {
         out << "butt"sv;
-    } else if (line_cap == Svg::StrokeLineCap::ROUND) {
+    } else if (line_cap == svg::StrokeLineCap::ROUND) {
         out << "round"sv;
     } else  {
         out << "square"sv;
@@ -130,14 +130,14 @@ ostream& operator<< (ostream& out, Svg::StrokeLineCap line_cap) {
     return out;
 }
 
-ostream& operator<< (ostream& out, Svg::StrokeLineJoin line_join) {
-    if (line_join == Svg::StrokeLineJoin::ARCS) {
+ostream& operator<< (ostream& out, svg::StrokeLineJoin line_join) {
+    if (line_join == svg::StrokeLineJoin::ARCS) {
        out << "arcs"sv;
-    } else if (line_join == Svg::StrokeLineJoin::BEVEL) {
+    } else if (line_join == svg::StrokeLineJoin::BEVEL) {
         out << "bevel"sv;
-    } else if (line_join == Svg::StrokeLineJoin::MITER) {
+    } else if (line_join == svg::StrokeLineJoin::MITER) {
         out << "miter"sv;
-    } else if (line_join == Svg::StrokeLineJoin::MITER_CLIP) {
+    } else if (line_join == svg::StrokeLineJoin::MITER_CLIP) {
         out << "miter-clip"sv;
     } else {
         out << "round"sv;
@@ -145,7 +145,7 @@ ostream& operator<< (ostream& out, Svg::StrokeLineJoin line_join) {
     return out;
 }
 
-ostream& operator<< (ostream& out, Svg::Color color) {
+ostream& operator<< (ostream& out, svg::Color color) {
     visit([&out](auto value) {
         PrintRoots(out, value);
     }, color);
@@ -161,13 +161,12 @@ void PrintRoots(std::ostream& out, std::string str) {
     out << str;
 }
 
-void PrintRoots(std::ostream& out, Svg::Rgb rgb) {
+void PrintRoots(std::ostream& out, svg::Rgb rgb) {
     out << "rgb(" << static_cast<uint>(rgb.red) << "," << static_cast<uint>(rgb.green) << "," << static_cast<uint>(rgb.blue) << ")";
 }
 
-void PrintRoots(std::ostream& out, Svg::Rgba rgba) {
+void PrintRoots(std::ostream& out, svg::Rgba rgba) {
     out << "rgba(" << static_cast<uint>(rgba.red) << "," << static_cast<uint>(rgba.green) << "," << static_cast<uint>(rgba.blue) << "," << rgba.opacity << ")";
 }
 
 }  // namespace svg
-
